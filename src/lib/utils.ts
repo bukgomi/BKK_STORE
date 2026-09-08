@@ -17,3 +17,12 @@ export function generateOrderNo(): string {
 export function classNames(...arr: (string | false | null | undefined)[]): string {
   return arr.filter(Boolean).join(" ");
 }
+
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+};
+
+/** 사용자 입력을 HTML(이메일 본문 등)에 삽입하기 전 이스케이프 */
+export function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
+}

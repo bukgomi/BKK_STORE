@@ -178,6 +178,7 @@ async function sendAdminNewOrderAlert(orderId: string) {
 
 /**
  * 주문 취소/환불시 재고 복원 (옵션 / 상품 모두 처리)
+ * 복원한 수량은 refundedQuantity 에 기록해 두 번 복원되지 않게 한다.
  */
 export async function restoreOrderStock(orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
@@ -196,7 +197,31 @@ export async function restoreOrderStock(orderId: string): Promise<void> {
           data: { stock: { increment: restoreQty } },
         });
       }
+      await tx.orderItem.update({
+        where: { id: it.id },
+        data: { refundedQuantity: it.quantity },
+      });
     }
+  });
+}
+
+/**
+ * 결제 전(PENDING) 주문 취소.
+ * 상태를 CANCELLED 로 바꾸고, 주문 생성 시 hold 해 둔 쿠폰 reservation 을 풀어준다.
+ * 이미 PENDING 이 아니면 아무것도 하지 않고 false 반환.
+ */
+export async function cancelPendingOrder(orderId: string, adminMemo?: string): Promise<boolean> {
+  return prisma.$transaction(async (tx) => {
+    const r = await tx.order.updateMany({
+      where: { id: orderId, status: "PENDING" },
+      data: { status: "CANCELLED", cancelledAt: new Date(), ...(adminMemo ? { adminMemo } : {}) },
+    });
+    if (r.count === 0) return false;
+    await tx.userCoupon.updateMany({
+      where: { reservedOrderId: orderId },
+      data: { reservedOrderId: null, reservedAt: null },
+    });
+    return true;
   });
 }
 

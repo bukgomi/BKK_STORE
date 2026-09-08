@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authorizeCron } from "@/lib/cron-auth";
+import { cancelPendingOrder } from "@/lib/stock";
 
 /**
  * 만료된 PENDING 주문 자동 취소 + 쿠폰/적립금 reservation 해제
@@ -22,31 +23,14 @@ export async function GET(req: NextRequest) {
       status: "PENDING",
       expiresAt: { lt: now },
     },
-    select: { id: true, orderNo: true, couponId: true, userId: true },
+    select: { id: true, orderNo: true },
     take: 200,
   });
 
   let cancelled = 0;
   for (const order of expired) {
     try {
-      await prisma.$transaction(async (tx) => {
-        const cur = await tx.order.findUnique({ where: { id: order.id }, select: { status: true } });
-        if (cur?.status !== "PENDING") return;
-
-        await tx.order.update({
-          where: { id: order.id },
-          data: { status: "CANCELLED", cancelledAt: now, adminMemo: "PENDING 만료 자동취소" },
-        });
-
-        // 쿠폰 reservation 해제
-        if (order.couponId && order.userId) {
-          await tx.userCoupon.updateMany({
-            where: { reservedOrderId: order.id },
-            data: { reservedOrderId: null, reservedAt: null },
-          });
-        }
-      });
-      cancelled++;
+      if (await cancelPendingOrder(order.id, "PENDING 만료 자동취소")) cancelled++;
     } catch (e) {
       console.error("[expire-pending]", order.orderNo, e);
     }

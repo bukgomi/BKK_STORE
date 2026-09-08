@@ -9,6 +9,12 @@ import { isLoginBlocked, logLoginAttempt, getClientInfo } from "@/lib/security";
 import { verifyTotp, decryptTotpSecret, verifyBackupCode, markTotpCodeUsed } from "@/lib/totp";
 
 const SIGNUP_BONUS_POINT = 1000;
+// JWT 세션은 서버가 끊을 수 없으므로, 이 주기로 DB 상태(탈퇴/정지)를 다시 확인해 세션을 무효화한다
+const STATUS_RECHECK_MS = 5 * 60 * 1000;
+
+function isBlockedStatus(status: string | null | undefined) {
+  return status === "WITHDRAWN" || status === "SUSPENDED";
+}
 
 const providers: NextAuthOptions["providers"] = [
   CredentialsProvider({
@@ -168,28 +174,39 @@ export const authOptions: NextAuthOptions = {
   },
   providers,
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // OAuth 신규 가입자에게 가입 축하 적립금 지급
-      // 이미 등록된 회원이면 동일 이메일을 OAuth와 자동 연결 (Adapter가 처리)
-      if (account && account.provider !== "credentials" && user.email) {
-        const existing = await prisma.user.findUnique({ where: { email: user.email } });
-        if (!existing) {
-          // PrismaAdapter가 곧 User를 생성할 텐데, 적립금은 createdEvent 에서 처리
-          return true;
+    async signIn({ user, account }) {
+      // Credentials 는 authorize() 에서 이미 상태 검사 완료. OAuth 는 Adapter 가 Account 링크로
+      // 기존 회원을 그대로 돌려주므로 탈퇴/정지 계정이 소셜 로그인으로 되살아나지 않게 여기서 차단.
+      if (account && account.provider !== "credentials" && user.id) {
+        const existing = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
+        if (existing && isBlockedStatus(existing.status)) {
+          return "/login?error=AccountBlocked";
         }
       }
       return true;
     },
     async jwt({ token, user }) {
-      if (user) token.id = (user as any).id;
-      // 매 요청마다 DB 조회는 부담이지만, 처음 로그인시 user.id 가 셋팅되도록 보장
+      if (user) {
+        token.id = (user as any).id;
+        token.statusCheckedAt = Date.now();
+      }
+      // 처음 로그인시 user.id 가 셋팅되도록 보장
       if (!token.id && token.email) {
         const u = await prisma.user.findUnique({ where: { email: token.email as string } });
         if (u) token.id = u.id;
       }
+
+      const checkedAt = (token.statusCheckedAt as number | undefined) ?? 0;
+      if (token.id && Date.now() - checkedAt > STATUS_RECHECK_MS) {
+        const u = await prisma.user.findUnique({ where: { id: token.id as string }, select: { status: true } });
+        token.blocked = !u || isBlockedStatus(u.status);
+        token.statusCheckedAt = Date.now();
+      }
       return token;
     },
     async session({ session, token }) {
+      // 탈퇴/정지된 회원은 세션 자체를 돌려주지 않음 → 모든 라우트의 session 체크에서 401
+      if (token.blocked) return null as any;
       if (session.user && token.id) (session.user as any).id = token.id;
       return session;
     },

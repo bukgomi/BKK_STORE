@@ -21,6 +21,7 @@ const CSRF_EXEMPT_PREFIXES = [
   "/api/payments/inicis/notify",   // 서명 검증으로 보호
   "/api/payments/inicis/return",   // PG 리다이렉트(form POST), authToken 검증으로 보호
   "/api/payments/naver/return",
+  "/api/payments/naver/webhook",   // 클라이언트 ID/시크릿 헤더 검증으로 보호
   "/api/payments/toss/webhook",    // HMAC 서명 검증으로 보호
   "/api/auth",                     // NextAuth 자체 CSRF 토큰 사용
   "/api/cron",                     // CRON_SECRET 검증으로 보호

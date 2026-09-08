@@ -94,6 +94,9 @@ export async function assertStaffApi() {
   const userId = (session.user as any).id as string | undefined;
   const user = userId ? await prisma.user.findUnique({ where: { id: userId } }) : null;
   if (!user) return { ok: false as const, status: 401, error: "회원 정보를 찾을 수 없습니다." };
+  if (user.status === "WITHDRAWN" || user.status === "SUSPENDED") {
+    return { ok: false as const, status: 403, error: "이용이 제한된 계정입니다." };
+  }
   if (STAFF_ROLES.includes(user.role)) return { ok: true as const, session };
   if (isAdminEmail(session.user.email)) return { ok: true as const, session };
   return { ok: false as const, status: 403, error: "직원 권한이 필요합니다." };

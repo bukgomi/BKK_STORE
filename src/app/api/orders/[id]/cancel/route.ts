@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { restoreOrderStock } from "@/lib/stock";
+import { cancelPendingOrder, restoreOrderStock } from "@/lib/stock";
 
 /**
  * 사용자 측 주문 취소
@@ -30,11 +30,8 @@ export async function POST(
   if (order.userId !== userId) return NextResponse.json({ error: "본인 주문이 아닙니다." }, { status: 403 });
 
   if (order.status === "PENDING") {
-    // 결제 전 — 즉시 취소
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { status: "CANCELLED", cancelledAt: new Date() },
-    });
+    // 결제 전 — 즉시 취소 (hold 중인 쿠폰도 함께 해제)
+    await cancelPendingOrder(order.id, "회원 직접 취소 (결제 전)");
     return NextResponse.json({ ok: true, refunded: false });
   }
 

@@ -8,19 +8,22 @@ import type {
 } from "./types";
 import { mockProvider } from "./mock";
 import { niceProvider } from "./nice";
+import { isMockIdentityAllowed } from "./util";
 
 export type { IdentityProvider, IdentityPurpose, CompletedVerification, StartResult } from "./types";
+export { isMockIdentityAllowed } from "./util";
 
 /**
  * IDENTITY_PROVIDER 환경변수로 어댑터 선택.
  * - 'nice' / 'kcb' / 'kcp' / 'mock' (default: mock)
- * - 운영에서 'mock' 이면 부팅 시 경고
+ * - mock 은 입력값만으로 아무 신원이든 "인증 완료" 처리하므로 운영에서는 선택 자체를 거부한다
+ *   (아이디/비밀번호 찾기가 뚫림). 스테이징 등에서 꼭 필요하면 IDENTITY_ALLOW_MOCK=true.
  */
 const PROVIDER_NAME = (process.env.IDENTITY_PROVIDER || "mock").toLowerCase() as IdentityProviderName;
 
-if (process.env.NODE_ENV === "production" && PROVIDER_NAME === "mock") {
-  logger.warn("identity.provider.mock_in_prod", {
-    warn: "IDENTITY_PROVIDER=mock 이 운영 환경에서 사용되고 있습니다. 본인확인기관 계약 후 nice/kcb/kcp 로 변경하세요.",
+if (PROVIDER_NAME === "mock" && !isMockIdentityAllowed()) {
+  logger.error("identity.provider.mock_blocked_in_prod", {
+    error: "IDENTITY_PROVIDER=mock 은 운영 환경에서 사용할 수 없습니다. 본인인증 API 는 모두 실패합니다.",
   });
 }
 
@@ -36,6 +39,9 @@ function selectProvider(): IdentityProvider {
       break;
     case "mock":
     default:
+      if (!isMockIdentityAllowed()) {
+        throw new Error("운영 환경에서는 mock 본인인증을 사용할 수 없습니다. IDENTITY_PROVIDER 를 설정하세요.");
+      }
       _cachedProvider = mockProvider;
       _activeName = "mock";
       break;

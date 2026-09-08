@@ -33,7 +33,8 @@ export async function checkIdempotency(
   if (!existing) return null;
   if (existing.scope !== scope) return null;
   if (existing.expiresAt < new Date()) return null;
-  if (userId && existing.userId !== userId) return null;
+  // 키는 전역 유일하므로 다른 사용자(비회원 포함)가 남의 응답을 재생하지 못하게 소유자를 엄격 비교
+  if (existing.userId !== (userId ?? null)) return null;
 
   try {
     const body = JSON.parse(existing.responseBody);

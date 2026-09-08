@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { restoreOrderStock } from "@/lib/stock";
 
@@ -7,15 +8,25 @@ import { restoreOrderStock } from "@/lib/stock";
  * 네이버페이 가맹점 관리자에서 등록한 Webhook URL 로 호출됨
  *
  * 인증: X-Naver-Client-Id, X-Naver-Client-Secret 일치 검증
+ * - 환경변수 미설정시 환경 무관 503 (운영 누락 방어)
  */
-export async function POST(req: NextRequest) {
-  const clientId = req.headers.get("x-naver-client-id");
-  const clientSecret = req.headers.get("x-naver-client-secret");
 
+function safeEqual(a: string | null, b: string): boolean {
+  if (!a) return false;
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
+}
+
+export async function POST(req: NextRequest) {
+  const expectedId = process.env.NAVERPAY_CLIENT_ID;
+  const expectedSecret = process.env.NAVERPAY_CLIENT_SECRET;
+  if (!expectedId || !expectedSecret) {
+    return NextResponse.json({ error: "naverpay not configured" }, { status: 503 });
+  }
   if (
-    process.env.NODE_ENV === "production" &&
-    (clientId !== process.env.NAVERPAY_CLIENT_ID ||
-      clientSecret !== process.env.NAVERPAY_CLIENT_SECRET)
+    !safeEqual(req.headers.get("x-naver-client-id"), expectedId) ||
+    !safeEqual(req.headers.get("x-naver-client-secret"), expectedSecret)
   ) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

@@ -37,8 +37,10 @@ export async function GET(req: NextRequest) {
   });
 
   // 2) 5년 이상 DORMANT/WITHDRAWN → 개인정보 파기 (PII 마스킹)
+  //    이미 파기된 계정(purged_ 이메일)은 매 실행마다 다시 잡히지 않도록 제외
   const purgeTargets = await prisma.user.findMany({
     where: {
+      email: { not: { startsWith: "purged_" } },
       OR: [
         { status: "DORMANT", dormantAt: { lt: purgeThreshold } },
         { status: "WITHDRAWN", withdrawnAt: { lt: purgeThreshold } },
@@ -49,20 +51,32 @@ export async function GET(req: NextRequest) {
   });
 
   for (const u of purgeTargets) {
-    await prisma.user.update({
-      where: { id: u.id },
-      data: {
-        email: `purged_${u.id}@example.invalid`,
-        name: "(파기)",
-        phone: null,
-        phoneEnc: null,
-        phoneHash: null,
-        image: null,
-        passwordHash: null,
-      },
-    });
-    // 주소도 모두 삭제
-    await prisma.address.deleteMany({ where: { userId: u.id } });
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: u.id },
+        data: {
+          status: "WITHDRAWN",
+          withdrawnAt: now,
+          email: `purged_${u.id}@example.invalid`,
+          username: null,
+          name: "(파기)",
+          phone: null,
+          phoneEnc: null,
+          phoneHash: null,
+          image: null,
+          passwordHash: null,
+          ci: null,
+          di: null,
+          totpSecretEnc: null,
+          totpEnabled: false,
+          totpBackupCodes: [],
+        },
+      }),
+      prisma.address.deleteMany({ where: { userId: u.id } }),
+      // OAuth 링크/세션까지 끊어야 소셜 로그인으로 파기 계정에 다시 들어오지 못함
+      prisma.account.deleteMany({ where: { userId: u.id } }),
+      prisma.session.deleteMany({ where: { userId: u.id } }),
+    ]);
   }
 
   return NextResponse.json({

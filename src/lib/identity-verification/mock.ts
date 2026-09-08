@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import type { IdentityProvider, StartResult } from "./types";
-import { defaultExpiresAt, generateReqSeq } from "./util";
+import { defaultExpiresAt, generateReqSeq, isMockIdentityAllowed } from "./util";
 
 /**
  * Mock 본인확인 provider
@@ -46,6 +46,9 @@ export const mockProvider: IdentityProvider = {
   },
 
   async handleReturn({ method, query, body }) {
+    if (!isMockIdentityAllowed()) {
+      return { ok: false, error: "mock 본인인증은 운영 환경에서 비활성화되어 있습니다." };
+    }
     // mock 은 GET/POST 동일하게 처리
     const data = method === "POST" ? (body || {}) : query;
     const reqSeq = data.reqSeq || data.req_seq;
