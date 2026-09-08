@@ -1,8 +1,9 @@
 /**
  * 2단계: 중간 JSON + 이미지 폴더 → 스토리지 업로드 + DB 반영
  *
- *   npx tsx scripts/migrate/technote/import.ts --json scripts/migrate/out/technote.json --images /path/to/data/tntshop1 [--dry-run] [--stock 999] [--only-active]
+ *   npx tsx scripts/migrate/technote/import.ts --json scripts/migrate/out/technote.json --images /path/to/data/tntshop1 [--overrides review.xlsx] [--dry-run] [--stock 999] [--only-active]
  *
+ * - --overrides: export-review.ts 로 만든 엑셀을 사용자가 수정한 파일. 상품명/가격/노출/옵션 수정·삭제·추가가 JSON 값보다 우선
  * - 이미지: `--images` 폴더(FTP 로 받은 data/tntshop1) 에서 상대경로로 찾고, 없으면 파일명으로 폴더 전체 검색
  * - 스토리지: src/lib/storage.ts 의 getStorage() (STORAGE_PROVIDER 에 따라 로컬/S3)
  * - DB: Category(slug upsert) → Product(sku upsert) → ProductVariant(전체 교체). 재실행해도 안전
@@ -13,8 +14,10 @@ config();
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
-import type { ExportFile, ExportProduct } from "./parse";
+import * as XLSX from "xlsx";
+import type { ExportFile } from "./parse";
 import { basenameOf } from "./lib";
+import { applyOverrides } from "./overrides";
 
 function arg(name: string, def?: string): string | undefined {
   const i = process.argv.indexOf(name);
@@ -25,6 +28,7 @@ const ONLY_ACTIVE = process.argv.includes("--only-active");
 const DEFAULT_STOCK = Number(arg("--stock", "999"));
 const jsonPath = arg("--json", "scripts/migrate/out/technote.json")!;
 const imagesDir = arg("--images");
+const overridesPath = arg("--overrides");
 
 /** 폴더 전체를 훑어 상대경로 → 절대경로, 파일명 → 절대경로 인덱스 */
 function indexImages(root: string) {
@@ -50,6 +54,11 @@ function contentTypeOf(file: string): string {
 
 async function main() {
   const data = JSON.parse(readFileSync(jsonPath, "utf8")) as ExportFile;
+  if (overridesPath) {
+    const r = applyOverrides(data, XLSX.readFile(overridesPath));
+    console.log(`수정 엑셀 반영: 상품 ${r.productsChanged}건, 옵션 수정 ${r.optionsChanged} / 삭제 ${r.optionsRemoved} / 추가 ${r.optionsAdded}`);
+    if (r.unknownSkus.length) console.warn(`  ⚠ JSON 에 없는 상품코드 ${r.unknownSkus.length}개 무시: ${r.unknownSkus.slice(0, 10).join(", ")}`);
+  }
   const products = ONLY_ACTIVE ? data.products.filter((p) => p.isActive) : data.products;
   console.log(`${DRY ? "[DRY-RUN] " : ""}분류 ${data.categories.length}개, 상품 ${products.length}개 (${data.source})`);
 
