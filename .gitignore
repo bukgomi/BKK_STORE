@@ -15,3 +15,7 @@ tsconfig.tsbuildinfo
 
 # Sentry
 .sentryclirc
+
+# 데이터 이관 산출물 (덤프/JSON 은 개인정보 포함 가능 → 커밋 금지)
+scripts/migrate/out/
+*.sql
