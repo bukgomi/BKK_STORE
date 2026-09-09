@@ -1,0 +1,9 @@
+# Windows 에서 clone 해도 컨테이너 안 sh 가 읽을 수 있도록 셸/설정 파일은 항상 LF
+*.sh text eol=lf
+docker/* text eol=lf
+docker-compose.yml text eol=lf
+Dockerfile text eol=lf
+.env.docker.example text eol=lf
+*.prisma text eol=lf
+update.bat text eol=crlf
+update.sh text eol=lf

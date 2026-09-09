@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import TrackingViewer from "@/components/TrackingViewer";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from "@/lib/order-status";
+import { getClientInfo, rateLimitAsync } from "@/lib/security";
 import TrackingVerifyForm from "./TrackingVerifyForm";
 
 export const dynamic = "force-dynamic";
@@ -57,8 +58,17 @@ export default async function CustomerTrackingPage({ params, searchParams }: Pro
   // 2) 비로그인 또는 다른 회원 → 받는분 휴대폰 뒷 4자리 일치하면 통과
   const isOwner = !!userId && order.userId === userId;
   const last4 = (searchParams.last4 || "").replace(/[^0-9]/g, "");
+
+  // 뒷 4자리는 경우의 수가 1만 개뿐 → IP+주문 단위로 시도 횟수 제한 (무차별 대입 방어)
+  let throttled = false;
+  if (!isOwner && last4.length === 4) {
+    const { ip } = getClientInfo();
+    const rl = await rateLimitAsync(`tracking-verify:${order.id}:${ip || "anon"}`, 5, 10 * 60_000);
+    throttled = !rl.ok;
+  }
+
   const phoneDigits = (order.phone || "").replace(/[^0-9]/g, "");
-  const phoneOk = last4.length === 4 && phoneDigits.endsWith(last4);
+  const phoneOk = !throttled && last4.length === 4 && phoneDigits.endsWith(last4);
   const verified = isOwner || phoneOk;
 
   if (!verified) {
@@ -75,7 +85,10 @@ export default async function CustomerTrackingPage({ params, searchParams }: Pro
             <Link href={`/login?callbackUrl=${encodeURIComponent(`/orders/${order.orderNo}/tracking`)}`} className="text-brand-600 hover:underline">로그인</Link>
           </p>
           <TrackingVerifyForm orderNo={order.orderNo} />
-          {last4.length === 4 && !phoneOk && (
+          {throttled && (
+            <p className="text-xs text-red-500">시도 횟수가 너무 많습니다. 10분 후 다시 시도해주세요.</p>
+          )}
+          {!throttled && last4.length === 4 && !phoneOk && (
             <p className="text-xs text-red-500">번호가 일치하지 않습니다.</p>
           )}
         </div>

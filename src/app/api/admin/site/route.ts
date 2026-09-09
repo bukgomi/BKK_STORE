@@ -4,12 +4,19 @@ import { assertAdminApi } from "@/lib/admin-guard";
 import { getSiteSettings, saveSiteSettings } from "@/lib/site-settings";
 import { audit } from "@/lib/audit";
 
+// 사이트 내부 경로 또는 http(s) 만 허용 — javascript:/data: 등 스킴 주입 차단
+const safeHref = (max: number) =>
+  z.string().max(max).refine(
+    (v) => v === "" || v.startsWith("/") || /^https?:\/\//i.test(v),
+    { message: "링크는 /경로 또는 http(s):// 로 시작해야 합니다." },
+  );
+
 const heroSlideSchema = z.object({
   eyebrow: z.string().max(40),
   title: z.string().min(1).max(80),
   subtitle: z.string().max(120).optional().or(z.literal("")),
   cta: z.string().min(1).max(40),
-  href: z.string().min(1).max(200),
+  href: safeHref(200).refine((v) => v.length > 0, { message: "링크를 입력해주세요." }),
   bgClass: z.string().max(200).optional().or(z.literal("")),
   image: z.string().max(500).optional().or(z.literal("")),
 });
@@ -17,7 +24,7 @@ const heroSlideSchema = z.object({
 const sideBannerSchema = z.object({
   eyebrow: z.string().max(40),
   title: z.string().min(1).max(60),
-  href: z.string().min(1).max(200),
+  href: safeHref(200).refine((v) => v.length > 0, { message: "링크를 입력해주세요." }),
   bgClass: z.string().max(200).optional().or(z.literal("")),
   emoji: z.string().max(8).optional().or(z.literal("")),
 });
@@ -25,7 +32,7 @@ const sideBannerSchema = z.object({
 const noticeBarSchema = z.object({
   enabled: z.boolean(),
   text: z.string().max(200),
-  href: z.string().max(200).optional().or(z.literal("")),
+  href: safeHref(200).optional(),
   bgColor: z.string().max(40).optional().or(z.literal("")),
   fgColor: z.string().max(40).optional().or(z.literal("")),
 });

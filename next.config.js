@@ -3,6 +3,15 @@ const { withSentryConfig } = require("@sentry/nextjs");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  webpack: (config) => {
+    // @sentry/node → @prisma/instrumentation → @opentelemetry 의 동적 require 경고
+    // (동작엔 영향 없음, dev 로그만 도배) — 무시
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /@opentelemetry\/instrumentation/, message: /Critical dependency/ },
+    ];
+    return config;
+  },
   images: {
     // 화이트리스트 도메인만 허용 (이전 hostname:"**" 는 SSRF/과금 위험)
     // 추가 도메인이 필요하면 IMAGE_REMOTE_HOSTS 콤마 환경변수에 호스트명을 등록.

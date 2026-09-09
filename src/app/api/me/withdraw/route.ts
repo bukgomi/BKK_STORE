@@ -67,8 +67,10 @@ export async function POST(req: NextRequest) {
           passwordHash: null,
         },
       }),
-      // 모든 활성 세션 무효화
+      // 모든 활성 세션 무효화 (JWT 세션은 auth.ts 의 상태 재검증으로 곧 끊김)
       prisma.session.deleteMany({ where: { userId: user.id } }),
+      // OAuth 링크를 끊어야 같은 소셜 계정으로 재가입 가능 + 탈퇴 계정으로 재로그인 불가
+      prisma.account.deleteMany({ where: { userId: user.id } }),
       // 위시리스트, 주소, 리뷰는 정책에 따라 유지 또는 삭제 — 여기서는 삭제
       prisma.wishlist.deleteMany({ where: { userId: user.id } }),
       prisma.address.deleteMany({ where: { userId: user.id } }),

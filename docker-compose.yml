@@ -1,0 +1,85 @@
+# 로컬 개발/운영 준비용 Docker 구성
+#
+#   cp .env.docker.example .env.docker      # 값 확인 (관리자 이메일/비밀번호 등)
+#   npm run docker:up                        # DB + Redis + 앱 + 워커 (첫 실행 시 자동 설치·스키마 반영·시드)
+#   → http://localhost:3000  /  관리자: http://localhost:3000/admin
+#   npm run docker:logs / npm run docker:down
+#
+# 코드를 고치면 컨테이너 안의 next dev 가 즉시 반영한다(bind mount).
+# node_modules / .next 는 named volume 이라 호스트(Windows/Mac)와 충돌하지 않는다.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fishing
+      POSTGRES_PASSWORD: fishing
+      POSTGRES_DB: fishing_mall
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fishing -d fishing_mall"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    image: node:22-bookworm   # slim 은 openssl 이 없어 Prisma 엔진이 못 뜸
+    working_dir: /app
+    command: ["sh", "docker/entrypoint-dev.sh"]
+    env_file: .env.docker
+    environment:
+      DATABASE_URL: postgresql://fishing:fishing@db:5432/fishing_mall?schema=public
+      REDIS_URL: redis://redis:6379
+      DISABLE_INPROCESS_WORKER: "true"
+      WATCHPACK_POLLING: "true"          # Windows/WSL 파일 변경 감지
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - node_modules:/app/node_modules
+      - next_cache:/app/.next
+      - uploads:/app/public/uploads     # STORAGE_PROVIDER=local 일 때 업로드 보존
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: node:22-bookworm   # slim 은 openssl 이 없어 Prisma 엔진이 못 뜸
+    working_dir: /app
+    command: ["sh", "docker/entrypoint-worker.sh"]
+    env_file: .env.docker
+    environment:
+      DATABASE_URL: postgresql://fishing:fishing@db:5432/fishing_mall?schema=public
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./:/app
+      - node_modules:/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
+  node_modules:
+  next_cache:
+  uploads:

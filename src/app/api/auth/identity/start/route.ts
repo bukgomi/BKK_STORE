@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getIdentityProvider, getActiveProviderName } from "@/lib/identity-verification";
+import { getIdentityProvider, getActiveProviderName, isMockIdentityAllowed } from "@/lib/identity-verification";
 import { getClientInfo, rateLimitAsync } from "@/lib/security";
 
 /**
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
         userAgent,
       });
     } catch (e: any) {
-      // NICE 모듈 미결합 등 — 자동으로 mock 폴백
-      if (provider.name !== "mock") {
+      // NICE 모듈 미결합 등 — 개발/스테이징에서만 mock 폴백 (운영에서는 명시적 실패)
+      if (provider.name !== "mock" && isMockIdentityAllowed()) {
         const { mockProvider } = await import("@/lib/identity-verification/mock");
         result = await mockProvider.start({ purpose: body.purpose, returnUrl, ip, userAgent });
         return NextResponse.json({

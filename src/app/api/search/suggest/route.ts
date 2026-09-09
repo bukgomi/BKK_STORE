@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getClientInfo, rateLimitAsync } from "@/lib/security";
 
 /**
  * 검색 자동완성 — 상품/브랜드/카테고리 통합
  * GET /api/search/suggest?q=검색어
  */
+const EMPTY = { products: [], brands: [], categories: [] };
+
 export async function GET(req: NextRequest) {
   const sp = new URL(req.url).searchParams;
   const q = (sp.get("q") || "").trim();
-  if (q.length < 1) return NextResponse.json({ products: [], brands: [], categories: [] });
-  if (q.length > 50) return NextResponse.json({ products: [], brands: [], categories: [] });
+  if (q.length < 1 || q.length > 50) return NextResponse.json(EMPTY);
+
+  // 타이핑마다 호출되는 엔드포인트라 넉넉하게, 그러나 무제한 스캔은 차단
+  const { ip } = getClientInfo(req);
+  const rl = await rateLimitAsync(`search-suggest:${ip || "anon"}`, 120, 60_000);
+  if (!rl.ok) return NextResponse.json(EMPTY, { status: 429 });
 
   try {
     const [products, brands, categories] = await Promise.all([
@@ -44,6 +51,6 @@ export async function GET(req: NextRequest) {
       categories,
     });
   } catch {
-    return NextResponse.json({ products: [], brands: [], categories: [] });
+    return NextResponse.json(EMPTY);
   }
 }

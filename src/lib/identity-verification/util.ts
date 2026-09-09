@@ -2,6 +2,16 @@ import crypto from "node:crypto";
 
 const TTL_MIN = parseInt(process.env.IDENTITY_TTL_MIN || "10", 10);
 
+/**
+ * mock 본인인증 허용 여부.
+ * mock 은 폼에 적은 이름/생년월일/휴대폰을 그대로 "인증 완료"로 믿기 때문에
+ * 운영에서는 IDENTITY_ALLOW_MOCK=true 로 명시하지 않는 한 절대 허용하지 않는다.
+ */
+export function isMockIdentityAllowed(): boolean {
+  if (process.env.NODE_ENV !== "production") return true;
+  return process.env.IDENTITY_ALLOW_MOCK === "true";
+}
+
 /** TTL 분 단위 — 일반적으로 5~10분 */
 export function defaultExpiresAt(): Date {
   return new Date(Date.now() + TTL_MIN * 60 * 1000);

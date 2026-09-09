@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { finalizeOrderPayment, restoreOrderStock } from "@/lib/stock";
+import { cancelPendingOrder, finalizeOrderPayment, restoreOrderStock } from "@/lib/stock";
 
 /**
  * 토스페이먼츠 Webhook
@@ -60,7 +60,11 @@ export async function POST(req: NextRequest) {
       }
       await finalizeOrderPayment({ orderId: order.id, providerTxnId: paymentKey || order.providerTxnId || "" });
     }
-    // 취소/환불
+    // 결제 전 주문이 닫힘 (만료/중단/취소) — 재고 차감 전이므로 복원 없이 취소 + 쿠폰 hold 해제
+    else if ((status === "EXPIRED" || status === "ABORTED" || status === "CANCELED") && order.status === "PENDING") {
+      await cancelPendingOrder(order.id, `토스 webhook: ${status}`);
+    }
+    // 결제 후 취소/환불
     else if ((status === "CANCELED" || status === "PARTIAL_CANCELED") && order.status !== "CANCELLED") {
       const totalCanceled = data.balanceAmount === 0 || status === "CANCELED";
       await prisma.order.update({
@@ -71,11 +75,7 @@ export async function POST(req: NextRequest) {
           refundedAmount: data.cancelAmount || order.totalAmount,
         },
       });
-      if (totalCanceled) await restoreOrderStock(order.id);
-    }
-    // 만료
-    else if (status === "EXPIRED" && order.status === "PENDING") {
-      await prisma.order.update({ where: { id: order.id }, data: { status: "CANCELLED", cancelledAt: new Date() } });
+      if (totalCanceled && order.paidAt) await restoreOrderStock(order.id);
     }
 
     return NextResponse.json({ ok: true });

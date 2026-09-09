@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientInfo } from "@/lib/security";
 import { notifyAdmin } from "@/lib/notify";
+import { escapeHtml } from "@/lib/utils";
 
 const CreateSchema = z.object({
   category: z.enum(["ORDER", "PAYMENT", "DELIVERY", "PRODUCT", "REFUND", "ACCOUNT", "ETC"]).default("ETC"),
@@ -79,11 +80,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 관리자 알림 (비동기)
+    // 관리자 알림 (비동기) — 사용자 입력은 HTML 이스케이프 (메일 클라이언트 내 HTML 인젝션 방지)
+    const authorEmail = user?.email || data.guestEmail || "";
     void notifyAdmin({
       subject: `[1:1 문의] ${data.subject}`,
-      text: `신규 1:1 문의 접수\n\n티켓: ${ticket.ticketNo}\n작성자: ${authorName} (${user?.email || data.guestEmail})\n분류: ${data.category}\n\n${data.content}`,
-      html: `<h3>신규 1:1 문의</h3><p><b>티켓</b>: ${ticket.ticketNo}<br/><b>작성자</b>: ${authorName} (${user?.email || data.guestEmail})<br/><b>분류</b>: ${data.category}</p><blockquote style="border-left: 3px solid #1e6fdc; padding-left: 12px; margin-left: 0;">${data.content.replace(/\n/g, "<br/>")}</blockquote>`,
+      text: `신규 1:1 문의 접수\n\n티켓: ${ticket.ticketNo}\n작성자: ${authorName} (${authorEmail})\n분류: ${data.category}\n\n${data.content}`,
+      html: `<h3>신규 1:1 문의</h3><p><b>티켓</b>: ${escapeHtml(ticket.ticketNo)}<br/><b>작성자</b>: ${escapeHtml(authorName)} (${escapeHtml(authorEmail)})<br/><b>분류</b>: ${escapeHtml(data.category)}</p><blockquote style="border-left: 3px solid #1e6fdc; padding-left: 12px; margin-left: 0;">${escapeHtml(data.content).replace(/\n/g, "<br/>")}</blockquote>`,
     }).catch(() => {});
 
     return NextResponse.json({ ok: true, ticketNo: ticket.ticketNo, id: ticket.id });

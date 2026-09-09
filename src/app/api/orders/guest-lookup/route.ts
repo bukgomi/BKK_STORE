@@ -2,16 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimitAsync, getClientInfo } from "@/lib/security";
-import { hashPhone } from "@/lib/crypto";
 
 /**
  * 비회원 주문 조회.
- * 입력: 주문번호 + 전화번호 (정규화 후 해시 비교)
+ * 입력: 주문번호 + 전화번호 (정규화 후 비교)
  *
  * 보안:
  * - 회원 주문(userId 있음)은 비회원 조회 거부 → 회원은 마이페이지 사용
  * - rate limit: ip 단위 시간당 30회
- * - 휴대폰 번호 정규화 후 phoneHash 또는 phone 평문(호환) 모두 비교
  */
 
 const Schema = z.object({
@@ -29,15 +27,11 @@ export async function POST(req: NextRequest) {
     const phoneRaw = data.phone.replace(/[^0-9]/g, "");
     if (phoneRaw.length < 8) return NextResponse.json({ error: "전화번호 형식 오류" }, { status: 400 });
 
-    const phoneH = hashPhone(phoneRaw);
-
     const order = await prisma.order.findFirst({
       where: {
         orderNo: data.orderNo,
         userId: null, // 비회원 주문만
-        OR: [
-          { phone: phoneRaw },
-        ],
+        phone: phoneRaw,
       },
       include: {
         items: {

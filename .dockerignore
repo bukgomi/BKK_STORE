@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+!.env.docker.example
+public/uploads
+scripts/migrate/out
+*.sql
+*.log
+coverage
+tests

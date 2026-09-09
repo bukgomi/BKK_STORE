@@ -50,6 +50,7 @@ async function main() {
     }
 
     if (existing) {
+      const resetPw = /^(1|true|yes)$/i.test(process.env.ADMIN_RESET_PASSWORD || "");
       const updated = await prisma.user.update({
         where: { email },
         data: {
@@ -57,9 +58,11 @@ async function main() {
           status: "ACTIVE",
           // 기존 회원에 username 이 없으면 채워준다
           ...(existing.username ? {} : { username }),
+          // ADMIN_RESET_PASSWORD=true 면 비밀번호를 ADMIN_PASSWORD 로 덮어씀 (로컬 초기화용)
+          ...(resetPw ? { passwordHash, passwordChangedAt: new Date(), totpEnabled: false, totpSecretEnc: null, totpBackupCodes: [] } : {}),
         },
       });
-      console.log(`[=] 기존 회원 ${email} → role=${updated.role} (username=${updated.username || "-"})`);
+      console.log(`[=] 기존 회원 ${email} → role=${updated.role} (username=${updated.username || "-"})${resetPw ? ` · 비밀번호 재설정: ${updated.username} / ${password}` : ""}`);
     } else {
       const created = await prisma.user.create({
         data: {
