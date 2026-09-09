@@ -1,19 +1,7 @@
 import Link from "next/link";
+import { emojiFor } from "@/lib/category-icons";
 
 type Category = { id: string; name: string; slug: string; emoji?: string; iconEmoji?: string | null };
-
-const EMOJI_MAP: Record<string, string> = {
-  rod: "🎣",
-  reel: "🎰",
-  line: "🧵",
-  lure: "🐟",
-  hook: "📍",
-  tackle: "🎒",
-  wear: "👕",
-  bag: "🧳",
-  clothing: "👕",
-  accessory: "🧰",
-};
 
 export default function CategoryShortcut({ categories }: { categories: Category[] }) {
   return (
@@ -26,7 +14,7 @@ export default function CategoryShortcut({ categories }: { categories: Category[
             className="group flex flex-col items-center gap-2 py-3 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-brand-50 group-hover:bg-brand-100 flex items-center justify-center text-2xl transition-colors">
-              {c.iconEmoji || c.emoji || EMOJI_MAP[c.slug] || "🛍"}
+              {emojiFor(c.slug, c.iconEmoji || c.emoji)}
             </div>
             <span className="text-xs sm:text-sm text-gray-700 group-hover:text-brand-600 font-medium">{c.name}</span>
           </Link>

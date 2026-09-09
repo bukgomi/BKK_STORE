@@ -2,18 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
+import { emojiFor } from "@/lib/category-icons";
 
 export const revalidate = 60;
-
-const EMOJI_MAP: Record<string, string> = {
-  rod: "🎣", reel: "🎰", line: "🧵", lure: "🐟",
-  hook: "📍", tackle: "🎒", wear: "👕", bag: "🧳",
-  accessory: "🧰",
-};
-
-function emojiFor(slug: string, fallback?: string | null) {
-  return fallback || EMOJI_MAP[slug] || "🛍";
-}
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const cat = await prisma.category.findUnique({

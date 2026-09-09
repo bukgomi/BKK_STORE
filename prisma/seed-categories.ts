@@ -6,6 +6,7 @@
  * 테크노트/스마트스토어 이관 엑셀의 '카테고리코드' 와 slug 가 일치한다.
  */
 import { PrismaClient } from "@prisma/client";
+import { CATEGORY_EMOJI } from "../src/lib/category-icons";
 
 const prisma = new PrismaClient();
 
@@ -60,15 +61,15 @@ async function main() {
   for (const [i, top] of CATEGORY_TREE.entries()) {
     const parent = await prisma.category.upsert({
       where: { slug: top.slug },
-      create: { slug: top.slug, name: top.name, sortOrder: i * 10, parentId: null },
-      update: { name: top.name, sortOrder: i * 10 },
+      create: { slug: top.slug, name: top.name, sortOrder: i * 10, parentId: null, iconEmoji: CATEGORY_EMOJI[top.slug] ?? null },
+      update: { name: top.name, sortOrder: i * 10, iconEmoji: CATEGORY_EMOJI[top.slug] ?? null },
     });
     n++;
     for (const [j, child] of (top.children || []).entries()) {
       await prisma.category.upsert({
         where: { slug: child.slug },
-        create: { slug: child.slug, name: child.name, sortOrder: j, parentId: parent.id },
-        update: { name: child.name, sortOrder: j, parentId: parent.id },
+        create: { slug: child.slug, name: child.name, sortOrder: j, parentId: parent.id, iconEmoji: CATEGORY_EMOJI[child.slug] ?? null },
+        update: { name: child.name, sortOrder: j, parentId: parent.id, iconEmoji: CATEGORY_EMOJI[child.slug] ?? null },
       });
       n++;
     }

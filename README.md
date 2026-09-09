@@ -31,7 +31,8 @@ Docker Desktop 만 있으면 DB·Redis·앱·워커가 한 번에 뜹니다. 상
 cp .env.docker.example .env.docker   # 관리자 이메일/비밀번호, (선택) R2 키 입력
 npm run docker:up                    # 첫 실행: 의존성 설치 → 스키마 반영 → 관리자·카테고리 시드 → next dev
 ```
-- 쇼핑몰: http://localhost:3000 · 관리자: http://localhost:3000/admin (아이디 = 관리자 이메일 앞부분)
+- 쇼핑몰: http://localhost:3000 · 관리자: http://localhost:3000/admin — 기본 계정 **admin / admin** (`.env.docker` 의 `ADMIN_EMAILS` 앞부분 / `ADMIN_PASSWORD`)
+- 이미 만든 관리자 비밀번호를 바꾸려면 `.env.docker` 에 `ADMIN_RESET_PASSWORD="true"` 넣고 `docker compose exec app npx tsx prisma/seed-admin.ts`
 - 로그: `npm run docker:logs` · 중지: `npm run docker:down` · 전부 초기화: `npm run docker:reset`
 - 코드 수정은 즉시 반영됩니다. `SEED_SAMPLE=true` 를 `.env.docker` 에 넣으면 샘플 상품도 들어갑니다.
 

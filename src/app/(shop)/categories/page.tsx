@@ -1,18 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { emojiFor } from "@/lib/category-icons";
 
 export const revalidate = 60;
 export const metadata = { title: "전체 카테고리" };
-
-const EMOJI_MAP: Record<string, string> = {
-  rod: "🎣", reel: "🎰", line: "🧵", lure: "🐟",
-  hook: "📍", tackle: "🎒", wear: "👕", bag: "🧳",
-  accessory: "🧰",
-};
-
-function emojiFor(slug: string, fallback?: string | null) {
-  return fallback || EMOJI_MAP[slug] || "🛍";
-}
 
 export default async function CategoriesPage() {
   const categories = await prisma.category.findMany({

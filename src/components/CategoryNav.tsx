@@ -1,11 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-
-const EMOJI_MAP: Record<string, string> = {
-  rod: "🎣", reel: "🎰", line: "🧵", lure: "🐟",
-  hook: "📍", tackle: "🎒", wear: "👕", bag: "🧳",
-  accessory: "🧰",
-};
+import { emojiFor } from "@/lib/category-icons";
 
 export default async function CategoryNav() {
   const categories = await prisma.category
@@ -49,7 +44,7 @@ export default async function CategoryNav() {
                 <div className="bg-white border border-gray-200 rounded-b-lg shadow-lg py-2 animate-slide-down">
                   <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
                     <span className="text-[11px] font-bold text-gray-400 tracking-wider uppercase">
-                      {c.iconEmoji || EMOJI_MAP[c.slug] || "🛍"} {c.name}
+                      {emojiFor(c.slug, c.iconEmoji)} {c.name}
                     </span>
                     <Link
                       href={`/category/${c.slug}`}
