@@ -23,7 +23,8 @@
     "worker:watch": "tsx --watch scripts/worker.ts",
     "migrate:technote:parse": "tsx scripts/migrate/technote/parse.ts",
     "migrate:technote:review": "tsx scripts/migrate/technote/export-review.ts",
-    "migrate:technote:import": "tsx scripts/migrate/technote/import.ts"
+    "migrate:technote:import": "tsx scripts/migrate/technote/import.ts",
+    "migrate:smartstore:convert": "tsx scripts/migrate/smartstore/convert.ts"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",

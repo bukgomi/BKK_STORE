@@ -25,6 +25,8 @@ function arg(name: string, def?: string): string | undefined {
 }
 const DRY = process.argv.includes("--dry-run");
 const ONLY_ACTIVE = process.argv.includes("--only-active");
+/** 분류만 만들고 상품은 넣지 않음 (스마트스토어 엑셀 등 다른 경로로 상품을 올릴 때 카테고리 골격만 필요) */
+const CATEGORIES_ONLY = process.argv.includes("--categories-only");
 const DEFAULT_STOCK = Number(arg("--stock", "999"));
 const jsonPath = arg("--json", "scripts/migrate/out/technote.json")!;
 const imagesDir = arg("--images");
@@ -127,6 +129,7 @@ async function main() {
       return (fallbackCatId = row.id);
     };
     console.log(`✔ 분류 ${catIdByUid.size}개 반영`);
+    if (CATEGORIES_ONLY) { await getFallbackCat(); console.log("--categories-only: 상품은 건너뜀"); return; }
 
     // 2) 상품
     let done = 0, imgCount = 0;
