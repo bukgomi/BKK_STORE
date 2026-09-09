@@ -4,6 +4,8 @@ out
 .env
 .env.local
 .env.production
+.env.docker
+*.dump
 *.log
 .DS_Store
 .idea

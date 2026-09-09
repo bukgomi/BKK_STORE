@@ -23,7 +23,28 @@ Next.js 14 + TypeScript + PostgreSQL(Prisma) + TailwindCSS 기반의 한국형 �
 - **State**: Zustand (장바구니)
 - **Validation**: Zod
 
-## 빠른 시작
+## 빠른 시작 (Docker — 권장)
+
+Docker Desktop 만 있으면 DB·Redis·앱·워커가 한 번에 뜹니다. 상품 등록·배너·공지 등 운영 준비를 로컬에서 끝낸 뒤 DB 만 운영으로 옮기는 흐름을 전제로 합니다.
+
+```bash
+cp .env.docker.example .env.docker   # 관리자 이메일/비밀번호, (선택) R2 키 입력
+npm run docker:up                    # 첫 실행: 의존성 설치 → 스키마 반영 → 관리자·카테고리 시드 → next dev
+```
+- 쇼핑몰: http://localhost:3000 · 관리자: http://localhost:3000/admin (아이디 = 관리자 이메일 앞부분)
+- 로그: `npm run docker:logs` · 중지: `npm run docker:down` · 전부 초기화: `npm run docker:reset`
+- 코드 수정은 즉시 반영됩니다. `SEED_SAMPLE=true` 를 `.env.docker` 에 넣으면 샘플 상품도 들어갑니다.
+
+**이미지 저장 위치**: `.env.docker` 의 `STORAGE_PROVIDER` 를 처음부터 `s3`(Cloudflare R2) 로 두면 로컬에서 올린 사진이 이미 클라우드에 있어 운영 이전 시 DB 만 옮기면 됩니다. `local` 이면 `public/uploads` 볼륨에 저장되므로 이전 시 이미지 업로드 + URL 치환이 추가로 필요합니다.
+
+### 로컬에서 운영으로 옮기기
+```bash
+npm run docker:db:dump                       # ./fishing_mall.dump 생성 (pg_dump custom 포맷)
+pg_restore --no-owner --no-privileges -d "$NEON_DATABASE_URL" fishing_mall.dump   # Neon 등 운영 DB 로 복원
+```
+그 뒤 Vercel(또는 `Dockerfile` 로 빌드한 컨테이너)에 같은 `ENCRYPTION_KEY` · `NEXTAUTH_SECRET` 과 운영 PG 키를 넣고 배포합니다. `ENCRYPTION_KEY` 가 다르면 암호화된 휴대폰번호 등을 읽을 수 없으니 로컬에서 쓴 값을 그대로 가져가세요.
+
+## 빠른 시작 (Docker 없이)
 
 ### 1. 의존성 설치
 ```bash
