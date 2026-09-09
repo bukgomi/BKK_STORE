@@ -38,7 +38,7 @@ services:
       retries: 20
 
   app:
-    image: node:22-bookworm-slim
+    image: node:22-bookworm   # slim 은 openssl 이 없어 Prisma 엔진이 못 뜸
     working_dir: /app
     command: ["sh", "docker/entrypoint-dev.sh"]
     env_file: .env.docker
@@ -61,7 +61,7 @@ services:
         condition: service_healthy
 
   worker:
-    image: node:22-bookworm-slim
+    image: node:22-bookworm   # slim 은 openssl 이 없어 Prisma 엔진이 못 뜸
     working_dir: /app
     command: ["sh", "docker/entrypoint-worker.sh"]
     env_file: .env.docker
