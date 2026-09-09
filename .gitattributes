@@ -5,3 +5,5 @@ docker-compose.yml text eol=lf
 Dockerfile text eol=lf
 .env.docker.example text eol=lf
 *.prisma text eol=lf
+update.bat text eol=crlf
+update.sh text eol=lf
