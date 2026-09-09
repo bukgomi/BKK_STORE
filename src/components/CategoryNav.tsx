@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { emojiFor } from "@/lib/category-icons";
+import CategoryIcon from "@/components/CategoryIcon";
 
 export default async function CategoryNav() {
   const categories = await prisma.category
@@ -43,8 +43,9 @@ export default async function CategoryNav() {
               >
                 <div className="bg-white border border-gray-200 rounded-b-lg shadow-lg py-2 animate-slide-down">
                   <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-gray-400 tracking-wider uppercase">
-                      {emojiFor(c.slug, c.iconEmoji)} {c.name}
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-400 tracking-wider uppercase">
+                      <CategoryIcon slug={c.slug} iconEmoji={c.iconEmoji} className="w-3.5 h-3.5" strokeWidth={2} />
+                      {c.name}
                     </span>
                     <Link
                       href={`/category/${c.slug}`}

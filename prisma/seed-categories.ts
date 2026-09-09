@@ -6,9 +6,11 @@
  * 테크노트/스마트스토어 이관 엑셀의 '카테고리코드' 와 slug 가 일치한다.
  */
 import { PrismaClient } from "@prisma/client";
-import { CATEGORY_EMOJI } from "../src/lib/category-icons";
 
 const prisma = new PrismaClient();
+
+// 아이콘은 components/CategoryIcon 이 slug 기준으로 SVG 를 그린다. iconEmoji 는 비워 둠 (관리자 수동 지정용)
+const CATEGORY_EMOJI: Record<string, string> = {};
 
 type Cat = { slug: string; name: string; children?: Cat[] };
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { emojiFor } from "@/lib/category-icons";
+import CategoryIcon from "@/components/CategoryIcon";
 
 export const revalidate = 60;
 export const metadata = { title: "전체 카테고리" };
@@ -65,8 +65,8 @@ export default async function CategoriesPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     </>
                   )}
-                  <div className="relative text-7xl opacity-90 drop-shadow-lg">
-                    {emojiFor(c.slug, c.iconEmoji)}
+                  <div className="relative w-20 h-20 rounded-2xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-colors">
+                    <CategoryIcon slug={c.slug} iconEmoji={c.iconEmoji} className="w-11 h-11 text-white" strokeWidth={1.4} />
                   </div>
                 </div>
 

@@ -1,33 +1,32 @@
 /**
- * 카테고리 slug → 대표 이모지 (DB 의 Category.iconEmoji 가 비어 있을 때 사용)
- * - 관리자 → 카테고리에서 iconEmoji 를 넣으면 그 값이 우선
- * - Windows 10 에서도 렌더되도록 Unicode 12 이하 이모지만 사용
+ * 카테고리 slug → 라인 아이콘 키 (components/CategoryIcon 이 SVG 로 그림)
+ * - 관리자 → 카테고리에서 iconEmoji 를 직접 넣으면 그 값이 우선 (보통 비워 둠)
  */
-export const CATEGORY_EMOJI: Record<string, string> = {
+export type CategoryIconKey =
+  | "minnow" | "worm" | "spoon" | "jighead" | "spinner" | "hook"
+  | "sinker" | "rod" | "line" | "box" | "squid" | "frog" | "tairaba" | "metaljig" | "gear";
+
+export const CATEGORY_ICON: Record<string, CategoryIconKey> = {
   // 하드베이트
-  "hard-bait": "🐟", "floating-minnow": "🐠", "suspend-minnow": "🐟", "sinking": "🌊",
-  "vibe": "📳", "crank": "🎯", "metal-jig": "⚙️", "tairaba": "🔴", "egi": "🦑",
-  "frog": "🐸", "other-minnow": "🐡",
+  "hard-bait": "minnow", "floating-minnow": "minnow", "suspend-minnow": "minnow", "sinking": "minnow",
+  "vibe": "minnow", "crank": "minnow", "other-minnow": "minnow",
+  "metal-jig": "metaljig", "tairaba": "tairaba", "egi": "squid", "frog": "frog",
   // 소프트베이트
-  "soft-bait": "🐛", "shad": "🐟", "tail": "🐍", "hog": "🦐", "grub": "🐛",
-  "double-ringer": "🧬", "other-worm": "🐛",
+  "soft-bait": "worm", "shad": "worm", "tail": "worm", "hog": "worm", "grub": "worm",
+  "double-ringer": "worm", "other-worm": "worm",
   // 지그헤드 & 스푼
-  "jig-spoon": "🥄", "jig-head": "⚓", "spoon": "🥄",
+  "jig-spoon": "spoon", "jig-head": "jighead", "spoon": "spoon",
   // 스커트베이트
-  "skirt-bait": "🎏", "spinnerbait": "🌀", "buzzbait": "🌪️", "gold-spinner": "✨",
+  "skirt-bait": "spinner", "spinnerbait": "spinner", "buzzbait": "spinner", "gold-spinner": "spinner",
   // 채비 / 장비
-  "rig": "🧷", "hook": "🎣", "sinker": "⚖️", "accessory": "🧰", "other-rig": "🔗",
-  "gear": "🎒", "rod": "🎣", "line": "🧵", "other-gear": "🧰",
-  "uncategorized": "📦",
-  // 예전 샘플 시드(seed.ts / seed-fresh.ts) 의 slug 호환
-  "reel": "🎰", "lure": "🐟", "tackle": "🎒", "wear": "👕", "bag": "🧳", "clothing": "👕",
-  "minnow": "🐠", "crankbait": "🎯", "vibration": "📳", "topwater": "🐸",
-  "worm": "🐛", "swimbait": "🐟",
+  "rig": "hook", "hook": "hook", "sinker": "sinker", "accessory": "gear", "other-rig": "hook",
+  "gear": "rod", "rod": "rod", "line": "line", "other-gear": "gear",
+  "uncategorized": "box",
+  // 예전 샘플 시드 slug 호환
+  "reel": "line", "lure": "minnow", "tackle": "gear", "minnow": "minnow", "crankbait": "minnow",
+  "vibration": "minnow", "topwater": "frog", "worm": "worm", "swimbait": "minnow",
 };
 
-export const DEFAULT_CATEGORY_EMOJI = "🎣";
-
-/** DB 값 → slug 맵 → 기본값 순으로 결정 */
-export function emojiFor(slug: string, override?: string | null): string {
-  return (override && override.trim()) || CATEGORY_EMOJI[slug] || DEFAULT_CATEGORY_EMOJI;
+export function iconKeyFor(slug: string): CategoryIconKey {
+  return CATEGORY_ICON[slug] || "box";
 }

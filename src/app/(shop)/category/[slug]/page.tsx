@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
-import { emojiFor } from "@/lib/category-icons";
+import CategoryIcon from "@/components/CategoryIcon";
 
 export const revalidate = 60;
 
@@ -93,7 +93,9 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
           </nav>
 
           <div className="flex items-end gap-4">
-            <div className="text-6xl md:text-7xl drop-shadow-lg">{emojiFor(category.slug, category.iconEmoji)}</div>
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0">
+              <CategoryIcon slug={category.slug} iconEmoji={category.iconEmoji} className="w-10 h-10 md:w-12 md:h-12 text-white" strokeWidth={1.5} />
+            </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">{category.name}</h1>
               <p className="text-sm md:text-base mt-1 opacity-90">
