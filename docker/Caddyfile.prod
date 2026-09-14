@@ -1,0 +1,16 @@
+# 운영용 리버스 프록시 (docker-compose.prod.yml 에서 사용)
+# - 인증서: Let's Encrypt HTTP-01 — VPS 의 80/443 이 열려 있으면 자동 발급/갱신된다
+# - http:// 요청은 Caddy 가 자동으로 https:// 로 리다이렉트
+# - www.도메인 → 도메인 으로 영구 리다이렉트
+{
+  email {$ACME_EMAIL}
+}
+
+{$PUBLIC_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy app:3000
+}
+
+www.{$PUBLIC_DOMAIN} {
+  redir https://{$PUBLIC_DOMAIN}{uri} permanent
+}

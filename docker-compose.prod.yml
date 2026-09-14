@@ -1,0 +1,123 @@
+# 운영용 Docker Compose (VPS 1대, 단독 사용 — docker-compose.yml 위에 덧씌우지 않는다)
+#
+#   cp .env.production.example .env.production   # 값 채우기 (chmod 600)
+#   npm run prod:up      # = docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+#   npm run prod:logs    # app / worker / caddy 로그
+#   npm run prod:ps
+#
+# 구성
+#   caddy  : 80/443 공개. https://PUBLIC_DOMAIN → app:3000 (Let's Encrypt HTTP-01 자동 발급/갱신)
+#   app    : Next.js (Dockerfile 로 빌드). 시작 시 prisma migrate deploy 후 next start
+#   worker : app 과 같은 이미지로 BullMQ 워커 실행
+#   db     : PostgreSQL 16 — 포트를 공개하지 않는다 (compose 내부 네트워크에서만 접근)
+#   redis  : Redis 7 (비밀번호 필수) — 포트를 공개하지 않는다
+#
+# 절대 규칙: db / redis / app 에 ports: 를 추가하지 않는다.
+#   Docker 의 포트 공개는 iptables 를 직접 건드려 ufw 를 우회하므로 "방화벽으로 막으면 된다" 는 가정이 통하지 않는다.
+
+# 프로젝트 이름을 고정해 같은 폴더의 개발용 compose(bkk_store)와 컨테이너·볼륨이 섞이지 않게 한다
+name: bkk-store-prod
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    logging: *default-logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    logging: *default-logging
+
+  app:
+    build: .
+    image: bkk-store:latest          # worker 가 같은 이미지를 재사용 (두 번 빌드하지 않음)
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      DISABLE_INPROCESS_WORKER: "true"
+    volumes:
+      # STORAGE_PROVIDER=local 일 때만 의미 있음. R2(STORAGE_PROVIDER=s3) 사용 시 불필요 — 지워도 된다.
+      - uploads:/app/public/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging: *default-logging
+
+  worker:
+    image: bkk-store:latest
+    restart: unless-stopped
+    command: ["npm", "run", "worker"]
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+    volumes:
+      # app 과 같은 이유 — R2 사용 시 불필요
+      - uploads:/app/public/uploads
+    depends_on:
+      app:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging: *default-logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"        # HTTP/3
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./docker/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data       # 인증서 보관 (지우면 재발급 → Let's Encrypt 발급 제한 주의)
+      - caddy_config:/config
+    depends_on:
+      - app
+    logging: *default-logging
+
+volumes:
+  pgdata:
+  redisdata:
+  caddy_data:
+  caddy_config:
+  uploads:      # STORAGE_PROVIDER=local 대비용. R2 사용 시 불필요

@@ -34,7 +34,11 @@
     "docker:public": "docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.public.yml up -d",
     "docker:public:logs": "docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.public.yml logs -f caddy duckdns",
     "docker:public:down": "docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.public.yml down",
-    "docker:public:url": "docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.public.yml logs tunnel 2>&1 | grep -o \"https://[a-z0-9-]*.trycloudflare.com\" | tail -1"
+    "docker:public:url": "docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.public.yml logs tunnel 2>&1 | grep -o \"https://[a-z0-9-]*.trycloudflare.com\" | tail -1",
+    "prod:up": "docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build",
+    "prod:down": "docker compose --env-file .env.production -f docker-compose.prod.yml down",
+    "prod:logs": "docker compose --env-file .env.production -f docker-compose.prod.yml logs -f app worker caddy",
+    "prod:ps": "docker compose --env-file .env.production -f docker-compose.prod.yml ps"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1128.0",
