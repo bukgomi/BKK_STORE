@@ -11,3 +11,12 @@ scripts/migrate/out
 *.log
 coverage
 tests
+!.env.production.example
+*.dump
+.github
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+backups
+docs
+*.md
+!README.md
