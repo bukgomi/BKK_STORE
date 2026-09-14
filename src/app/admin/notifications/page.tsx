@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import { ALIMTALK_TEMPLATES, type TemplateKey } from "@/lib/alimtalk";
 import TestSendForm from "./TestSendForm";
@@ -32,7 +33,8 @@ function maskPhoneDisplay(p: string): string {
   return `${n.slice(0, 3)}-****-${n.slice(-4)}`;
 }
 
-export default function AdminNotificationsPage() {
+export default async function AdminNotificationsPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const adminNotify = getAdminNotifyConfig();
 
   return (

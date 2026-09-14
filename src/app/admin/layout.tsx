@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin-guard";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
-export const metadata = { title: "관리자 - 낚시몰" };
+export const metadata = { title: "관리자 - 탑캐스팅" };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAdmin();

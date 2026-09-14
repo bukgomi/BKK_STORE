@@ -16,7 +16,7 @@ import { sendEmail } from "@/lib/notify";
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1시간
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
-const COMPANY = process.env.NEXT_PUBLIC_BUSINESS_NAME || "낚시몰";
+const COMPANY = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");

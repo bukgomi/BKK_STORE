@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
@@ -14,6 +15,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default async function AdminSupportPage({ searchParams }: { searchParams: { status?: string } }) {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const status = searchParams.status;
   const where = status ? { status: status as any } : {};
 

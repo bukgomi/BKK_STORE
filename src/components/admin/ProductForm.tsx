@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { calcDiscountRate, formatKRW } from "@/lib/utils";
 import VariantEditor, { type VariantRow } from "@/components/admin/VariantEditor";
+import RichDescriptionEditor from "@/components/admin/RichDescriptionEditor";
 
 export type ProductFormValue = {
   id?: string;
@@ -87,7 +88,8 @@ export default function ProductForm({ mode, initial, categories }: Props) {
       validVariants.push({
         id: vr.id,
         name: vr.name.trim(),
-        colorHex: vr.colorHex,
+        optionType: vr.optionType || "option",
+        colorHex: vr.colorHex ?? null,
         stock: vr.stock,
         priceModifier: typeof vr.priceModifier === "number" ? vr.priceModifier : 0,
         sortOrder: vr.sortOrder,
@@ -241,8 +243,8 @@ export default function ProductForm({ mode, initial, categories }: Props) {
             )}
           </Section>
 
-          {/* 옵션 (색상별 재고) */}
-          <Section title="옵션 (색상별 재고)">
+          {/* 옵션 */}
+          <Section title="옵션">
             <p className="text-xs text-gray-500 -mt-1 mb-2">
               옵션이 1개 이상 등록되면 위의 "재고" 값은 무시되고 옵션별 재고로 판매됩니다.
             </p>
@@ -253,13 +255,13 @@ export default function ProductForm({ mode, initial, categories }: Props) {
           </Section>
 
           {/* 상품 설명 */}
-          <Section title="상품 상세설명">
-            <textarea
-              rows={10}
-              className="input font-mono text-xs"
+          <Section title="상품 상세설명 (상세페이지)">
+            <p className="text-xs text-gray-500 -mt-1 mb-2">
+              직접 작성 탭에서 글과 사진으로 꾸미거나, HTML 작성 탭에 상세페이지 HTML 을 그대로 붙여 넣으세요. 권장 이미지 가로 860px.
+            </p>
+            <RichDescriptionEditor
               value={v.description}
-              onChange={(e) => set("description", e.target.value)}
-              placeholder="상품의 특징, 스펙, 주의사항 등을 입력하세요."
+              onChange={(html) => set("description", html)}
             />
           </Section>
 

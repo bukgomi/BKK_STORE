@@ -1,0 +1,68 @@
+# 외부 도메인으로 공개할 때 docker-compose.yml 위에 덧씌우는 구성
+#
+#   .env.docker 에 PUBLIC_DOMAIN / ACME_EMAIL / DUCKDNS_TOKEN 설정 후
+#   npm run docker:public        # = docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.public.yml up -d
+#   npm run docker:public:logs   # caddy / duckdns 로그
+#
+# 준비물 (공유기):
+#   외부 80, 443 (및 대체 8443) 포트 → 이 PC 로 포트포워딩/방화벽 허용. 인증서는 DuckDNS DNS-01 로 발급되어 포트가 막혀도 발급된다.
+#
+# 서비스
+#   caddy   : https://<PUBLIC_DOMAIN> → app:3000 리버스 프록시 + 인증서 자동 관리
+#   duckdns : 5분마다 공인 IP 를 DuckDNS 에 갱신 (유동 IP 대응). DUCKDNS_TOKEN 이 없으면 빼도 됨
+#   app     : NEXTAUTH_URL / 사이트 URL 을 공개 도메인으로 덮어씀
+
+services:
+  caddy:
+    build:
+      context: ./docker
+      dockerfile: caddy.Dockerfile   # caddy + DuckDNS DNS 플러그인
+    image: bkk-caddy-duckdns
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"          # HTTP/3
+      - "8443:8443"            # 80/443 이 통신사에서 막힌 경우용 대체 포트
+      - "8443:8443/udp"
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-topcasting.duckdns.org}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # 인증서 보관 (지우면 재발급 → Let's Encrypt 발급 제한 주의)
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  # 통신사(KT 가정용 등)가 들어오는 80/443 을 막는 경우용 — 밖으로 나가는 터널로 임시 공개 주소를 받는다 (계정 불필요)
+  #   주소 확인: docker compose ... logs tunnel | grep trycloudflare
+  #   재시작마다 주소가 바뀐다. 고정 주소가 필요하면 Cloudflare 계정 + 도메인으로 named tunnel 로 전환
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://app:3000
+    depends_on:
+      - app
+
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    restart: unless-stopped
+    environment:
+      SUBDOMAINS: ${DUCKDNS_SUBDOMAINS:-topcasting}
+      TOKEN: ${DUCKDNS_TOKEN}
+      TZ: Asia/Seoul
+      LOG_FILE: "false"
+
+  app:
+    environment:
+      NEXTAUTH_URL: https://${PUBLIC_DOMAIN:-topcasting.duckdns.org}
+      # 도메인(https)과 localhost(http) 양쪽에서 로그인이 유지되도록 요청의 Host/프로토콜을 기준으로 인증 URL·쿠키를 정한다
+      AUTH_TRUST_HOST: "true"
+      NEXT_PUBLIC_SITE_URL: https://${PUBLIC_DOMAIN:-topcasting.duckdns.org}
+      ALLOWED_ORIGINS: https://${PUBLIC_DOMAIN:-topcasting.duckdns.org},http://localhost:3000
+
+volumes:
+  caddy_data:
+  caddy_config:

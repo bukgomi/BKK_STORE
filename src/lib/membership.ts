@@ -5,7 +5,7 @@
  * 등급별로 적립률·무료배송 기준이 차등 적용됨.
  *
  * - 적립률: 결제 완료 시 (subtotal × earningRate) 만큼 포인트 지급
- * - 무료배송 임계: 사이트 기본값(50,000) 이 더 낮을 수 있음 → min 사용
+ * - 무료배송 임계: 사이트 기본값(30,000) 이 더 낮을 수 있음 → min 사용
  */
 
 export type MembershipTier = "BRONZE" | "SILVER" | "GOLD" | "VIP" | "VVIP";
@@ -32,7 +32,7 @@ export const TIERS: TierMeta[] = [
     tier: "BRONZE", label: "브론즈",
     thresholdAmount: 0,
     earningRate: 0.005,
-    freeShippingMin: 50000,
+    freeShippingMin: 30000,
     color: "text-amber-700", bgClass: "bg-amber-100", emoji: "🥉",
     benefits: ["기본 0.5% 적립"],
   },
@@ -40,7 +40,7 @@ export const TIERS: TierMeta[] = [
     tier: "SILVER", label: "실버",
     thresholdAmount: 100_000,
     earningRate: 0.01,
-    freeShippingMin: 50000,
+    freeShippingMin: 30000,
     color: "text-gray-600", bgClass: "bg-gray-200", emoji: "🥈",
     benefits: ["1% 적립", "월 1회 5천원 쿠폰"],
   },

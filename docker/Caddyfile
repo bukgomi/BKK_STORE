@@ -1,0 +1,16 @@
+# 외부 공개용 리버스 프록시 (docker-compose.public.yml 에서 사용)
+# - 인증서: DuckDNS DNS-01 (TXT 레코드) 로 발급/갱신 → 80/443 포트가 막혀 있어도 발급된다
+# - 443 과 8443 두 포트에서 같은 사이트 제공 (통신사가 80/443 을 막는 경우 8443 으로 접속)
+# - 80 → https 자동 리다이렉트
+{
+  email {$ACME_EMAIL}
+}
+
+{$PUBLIC_DOMAIN}:443, {$PUBLIC_DOMAIN}:8443 {
+  tls {
+    dns duckdns {$DUCKDNS_TOKEN}
+    resolvers 1.1.1.1 8.8.8.8
+  }
+  encode zstd gzip
+  reverse_proxy app:3000
+}

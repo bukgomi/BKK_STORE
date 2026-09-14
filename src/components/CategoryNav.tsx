@@ -12,13 +12,15 @@ export default async function CategoryNav() {
       },
     })
     .catch(() => []);
+  // 미분류는 메뉴에서 숨기고 그 자리에 채비도(/rigs)를 둔다
+  const menu = categories.filter((c) => c.slug !== "uncategorized");
 
   return (
-    <nav className="relative border-t border-gray-100 bg-gray-50">
-      <div className="container-mall flex items-center h-12 overflow-x-visible">
+    <nav className="hidden md:block border-b border-gray-200 bg-gray-50">
+      <div className="container-mall flex items-center h-12 overflow-x-visible max-lg:overflow-x-auto max-lg:no-scrollbar max-lg:px-2">
         <Link
           href="/products"
-          className="inline-flex items-center px-4 h-12 text-sm font-bold text-brand-700 hover:bg-white whitespace-nowrap border-b-2 border-transparent hover:border-brand-700 transition-colors"
+          className="inline-flex items-center px-4 max-lg:px-3 h-12 text-base max-lg:text-[15px] font-bold text-brand-700 shrink-0 hover:bg-white whitespace-nowrap border-b-2 border-transparent hover:border-brand-700 transition-colors"
         >
           전체상품
         </Link>
@@ -27,12 +29,12 @@ export default async function CategoryNav() {
         <span aria-hidden="true" className="mx-1 h-4 w-px bg-gray-300" />
 
         {/* 메인 카테고리 — flex-1 로 가용 공간을 채우고 균등 간격으로 분포 */}
-        <div className="flex-1 flex items-center justify-around">
-          {categories.map((c) => (
+        <div className="flex-1 flex items-center justify-around max-lg:justify-start">
+          {menu.map((c) => (
           <div key={c.id} className="group relative">
             <Link
               href={`/category/${c.slug}`}
-              className="inline-flex items-center px-4 h-12 text-[15px] font-medium text-gray-700 hover:text-brand-600 group-hover:text-brand-600 whitespace-nowrap border-b-2 border-transparent group-hover:border-brand-500 transition-colors"
+              className="inline-flex items-center px-3 xl:px-4 h-12 text-base max-lg:text-[15px] font-medium text-gray-700 hover:text-brand-600 group-hover:text-brand-600 whitespace-nowrap border-b-2 border-transparent group-hover:border-brand-500 transition-colors"
             >
               {c.name}
             </Link>
@@ -70,16 +72,14 @@ export default async function CategoryNav() {
             )}
           </div>
           ))}
+          <Link
+            href="/rigs"
+            className="inline-flex items-center px-3 xl:px-4 h-12 text-base max-lg:text-[15px] font-medium text-gray-700 hover:text-brand-600 whitespace-nowrap border-b-2 border-transparent hover:border-brand-500 transition-colors"
+          >
+            채비도
+          </Link>
         </div>
 
-        {/* 좌우 구분선 */}
-        <span aria-hidden="true" className="mx-1 h-4 w-px bg-gray-300" />
-
-        <div className="flex items-center gap-3 text-xs">
-          <Link href="/products?sort=new" className="text-gray-500 hover:text-brand-600 px-2">신상품</Link>
-          <Link href="/products?sort=best" className="text-gray-500 hover:text-brand-600 px-2">베스트</Link>
-          <Link href="/products?sale=1" className="text-accent-500 font-bold px-2">할인특가</Link>
-        </div>
       </div>
     </nav>
   );

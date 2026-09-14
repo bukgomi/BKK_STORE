@@ -289,7 +289,7 @@ async function checkAndNotifyLowStock(productIds: string[]) {
   `;
 
   await notifyAdmin({
-    subject: `[낚시몰] 재고 임계치 도달 (${triggered.length}건)`,
+    subject: `[탑캐스팅] 재고 임계치 도달 (${triggered.length}건)`,
     html, text,
   });
 }

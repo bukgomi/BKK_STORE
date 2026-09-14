@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "교환·반품·환불 안내 | 낚시몰",
+  title: "교환·반품·환불 안내 | 탑캐스팅",
   description: "청약철회, 교환, 반품, 환불 정책 안내",
 };
 

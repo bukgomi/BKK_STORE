@@ -20,9 +20,9 @@ const config: Config = {
         accent: { 500: "#ff6a3d" },
       },
       fontFamily: {
-        sans: ["Pretendard", "system-ui", "sans-serif"],
+        sans: ["Pretendard Variable", "Pretendard", "-apple-system", "BlinkMacSystemFont", "system-ui", "Roboto", "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "sans-serif"],
       },
-      maxWidth: { container: "1200px" },
+      maxWidth: { container: "1260px" },
     },
   },
   plugins: [],

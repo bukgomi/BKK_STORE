@@ -5,7 +5,8 @@ import { assertAdminApi } from "@/lib/admin-guard";
 
 const VariantSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1).max(40),
+  name: z.string().min(1).max(80),
+  optionType: z.string().max(80).default("option"),
   colorHex: z.string().nullable().optional(),
   stock: z.number().int().min(0),
   priceModifier: z.number().int().default(0),
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
           ? {
               create: variants.map(({ id, ...v }) => ({
                 name: v.name,
+                optionType: v.optionType,
                 colorHex: v.colorHex || null,
                 stock: v.stock,
                 priceModifier: v.priceModifier,

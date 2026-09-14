@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getLowStockThreshold } from "@/lib/notify";
@@ -6,6 +7,7 @@ import StockNotifyButton from "./StockNotifyButton";
 export const dynamic = "force-dynamic";
 
 export default async function AdminStockPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const threshold = getLowStockThreshold();
 
   const items = await prisma.product.findMany({

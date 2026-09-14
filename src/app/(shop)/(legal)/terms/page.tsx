@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "이용약관 | 낚시몰",
-  description: "낚시몰 서비스 이용약관 안내",
+  title: "이용약관 | 탑캐스팅",
+  description: "탑캐스팅 서비스 이용약관 안내",
 };
 
-const COMPANY = process.env.NEXT_PUBLIC_BUSINESS_NAME || "낚시몰";
+const COMPANY = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
 
 export default function TermsPage() {
   return (

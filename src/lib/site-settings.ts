@@ -11,6 +11,8 @@ export type HeroSlide = {
   bgClass?: string;
   /** 배경 이미지 URL (지정시 bgClass 위에 어둡게 오버레이) */
   image?: string;
+  /** true 면 문구·버튼·어두운 오버레이 없이 이미지만 보여준다 (브랜드 배너 등) */
+  imageOnly?: boolean;
 };
 
 export type SideBanner = {
@@ -63,7 +65,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       eyebrow: "시즌 특가",
       title: "봄 시즌 낚시용품 대전",
-      subtitle: "최대 30% 할인 · 무료배송 5만원 이상",
+      subtitle: "최대 30% 할인 · 무료배송 3만원 이상",
       cta: "할인상품 보러가기",
       href: "/products?sale=1",
       bgClass: "bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500",
@@ -109,7 +111,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     fgColor: "text-white",
   },
   footer: {},
-  freeShippingMin: 50000,
+  freeShippingMin: 30000,
   showBestSection: true,
   showFeaturedSection: true,
   showNewSection: true,

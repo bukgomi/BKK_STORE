@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { isLoginBlocked, logLoginAttempt, getClientInfo } from "@/lib/security";
 import { verifyTotp, decryptTotpSecret, verifyBackupCode, markTotpCodeUsed } from "@/lib/totp";
+import { encrypt, hashPhone } from "@/lib/crypto";
+import { phoneFromOAuthProfile, findPhoneOwner } from "@/lib/phone-dup";
 
 const SIGNUP_BONUS_POINT = 1000;
 // JWT 세션은 서버가 끊을 수 없으므로, 이 주기로 DB 상태(탈퇴/정지)를 다시 확인해 세션을 무효화한다
@@ -151,6 +153,17 @@ if (process.env.KAKAO_CLIENT_ID && process.env.KAKAO_CLIENT_SECRET) {
   providers.push(KakaoProvider({
     clientId: process.env.KAKAO_CLIENT_ID,
     clientSecret: process.env.KAKAO_CLIENT_SECRET,
+    // 카카오는 이메일이 "선택 동의"라 값이 없을 수 있음 → User.email(필수/유니크) 자리에 대체 주소를 넣어 가입 진행
+    profile(profile: any) {
+      const acc = profile.kakao_account || {};
+      const nickname: string | undefined = acc.profile?.nickname;
+      return {
+        id: String(profile.id),
+        name: nickname || `카카오회원${String(profile.id).slice(-4)}`,
+        email: acc.email || `kakao_${profile.id}@kakao.local`,
+        image: acc.profile?.profile_image_url || null,
+      };
+    },
   }));
 }
 
@@ -174,20 +187,49 @@ export const authOptions: NextAuthOptions = {
   },
   providers,
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       // Credentials 는 authorize() 에서 이미 상태 검사 완료. OAuth 는 Adapter 가 Account 링크로
       // 기존 회원을 그대로 돌려주므로 탈퇴/정지 계정이 소셜 로그인으로 되살아나지 않게 여기서 차단.
-      if (account && account.provider !== "credentials" && user.id) {
-        const existing = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
-        if (existing && isBlockedStatus(existing.status)) {
-          return "/login?error=AccountBlocked";
+      if (account && account.provider !== "credentials") {
+        const linked = await prisma.account.findUnique({
+          where: { provider_providerAccountId: { provider: account.provider, providerAccountId: account.providerAccountId } },
+          select: { userId: true },
+        });
+        if (linked) {
+          const existing = await prisma.user.findUnique({ where: { id: linked.userId }, select: { status: true } });
+          if (existing && isBlockedStatus(existing.status)) return "/login?error=AccountBlocked";
+          return true;
+        }
+        // 이 소셜 계정으로는 처음 → 신규 가입(또는 이메일 연결) 직전. 휴대폰 번호가 같은 기존 회원이 있으면 중복 가입 안내
+        const phone = phoneFromOAuthProfile(account.provider, profile);
+        if (phone) {
+          const owner = await findPhoneOwner(phone);
+          if (owner) {
+            const q = new URLSearchParams({ error: "PhoneDuplicate", methods: owner.methods.join(","), hint: owner.hint });
+            return `/login?${q.toString()}`;
+          }
         }
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token.id = (user as any).id;
+        // 소셜 로그인 시 동의받은 휴대폰 번호를 회원 정보에 채움 (아직 번호가 없을 때만) → 이후 중복 가입 검사 기준
+        if (account && account.provider !== "credentials") {
+          const phone = phoneFromOAuthProfile(account.provider, profile);
+          if (phone) {
+            try {
+              const cur = await prisma.user.findUnique({ where: { id: (user as any).id as string }, select: { phoneHash: true } });
+              if (cur && !cur.phoneHash) {
+                await prisma.user.update({ where: { id: (user as any).id as string }, data: { phone, phoneEnc: encrypt(phone), phoneHash: hashPhone(phone), phoneVerifiedAt: new Date() } });
+              }
+            } catch (e) { console.error("oauth phone save error", e); }
+          }
+        }
+        // DB role 을 세션에 실어 헤더의 "관리자" 링크 등이 이메일 화이트리스트 없이도 판단할 수 있게
+        const ur = await prisma.user.findUnique({ where: { id: (user as any).id as string }, select: { role: true } });
+        if (ur) token.role = ur.role;
         token.statusCheckedAt = Date.now();
       }
       // 처음 로그인시 user.id 가 셋팅되도록 보장
@@ -198,8 +240,9 @@ export const authOptions: NextAuthOptions = {
 
       const checkedAt = (token.statusCheckedAt as number | undefined) ?? 0;
       if (token.id && Date.now() - checkedAt > STATUS_RECHECK_MS) {
-        const u = await prisma.user.findUnique({ where: { id: token.id as string }, select: { status: true } });
+        const u = await prisma.user.findUnique({ where: { id: token.id as string }, select: { status: true, role: true } });
         token.blocked = !u || isBlockedStatus(u.status);
+        if (u) token.role = u.role;
         token.statusCheckedAt = Date.now();
       }
       return token;
@@ -208,6 +251,7 @@ export const authOptions: NextAuthOptions = {
       // 탈퇴/정지된 회원은 세션 자체를 돌려주지 않음 → 모든 라우트의 session 체크에서 401
       if (token.blocked) return null as any;
       if (session.user && token.id) (session.user as any).id = token.id;
+      if (session.user && token.role) (session.user as any).role = token.role;
       return session;
     },
   },

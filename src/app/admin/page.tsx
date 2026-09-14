@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatKRW } from "@/lib/utils";
@@ -27,6 +28,7 @@ const STATUS_TONE: Record<string, "success" | "warning" | "danger" | "info" | "d
 };
 
 export default async function AdminDashboardPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const lowStockThreshold = getLowStockThreshold();
 
   const today = startOfDay(new Date());

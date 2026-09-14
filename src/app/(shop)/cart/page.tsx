@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useShippingPolicy } from "@/lib/use-shipping-policy";
+import { calcShippingFee, formatMin } from "@/lib/shipping";
 import { useEffect, useState } from "react";
 import { useCart, cartKeyOf } from "@/store/cart";
 import { formatKRW } from "@/lib/utils";
@@ -10,11 +12,12 @@ export default function CartPage() {
   const { items, setQty, remove, clear, totalPrice } = useCart();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const policy = useShippingPolicy();
 
   if (!mounted) return null;
 
   const subtotal = totalPrice();
-  const shipping = subtotal === 0 ? 0 : subtotal >= 50000 ? 0 : 3000;
+  const shipping = calcShippingFee(subtotal, policy);
   const total = subtotal + shipping;
 
   if (items.length === 0) {
@@ -104,7 +107,7 @@ export default function CartPage() {
           <button onClick={() => router.push("/checkout")} className="btn-primary w-full h-12 mt-4 text-base">
             주문하기
           </button>
-          <p className="mt-2 text-[11px] text-gray-400">5만원 이상 구매시 배송비 무료 · 쿠폰/적립금은 결제 단계에서 적용</p>
+          <p className="mt-2 text-[11px] text-gray-400">{formatMin(policy.freeShippingMin, "만")} 이상 구매시 배송비 무료 · 쿠폰/적립금은 결제 단계에서 적용</p>
         </aside>
       </div>
     </div>

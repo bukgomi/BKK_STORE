@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import {
   monthRange, currentYearMonth,
@@ -19,6 +20,7 @@ function formatRangeLabel(month: string, from?: string, to?: string) {
 }
 
 export default async function AdminReportsPage({ searchParams }: { searchParams: SP }) {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const month = searchParams.month || currentYearMonth();
   const fromStr = searchParams.from;
   const toStr = searchParams.to;

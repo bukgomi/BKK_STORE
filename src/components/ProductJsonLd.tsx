@@ -5,7 +5,7 @@
  */
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
-const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "낚시몰";
+const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
 
 type Props = {
   id: string;

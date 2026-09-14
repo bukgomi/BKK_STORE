@@ -5,8 +5,8 @@ import GAScript from "@/components/GAScript";
 import Toaster from "@/components/Toaster";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
-const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "낚시몰";
-const SITE_DESC = "낚싯대, 릴, 라인, 루어, 채비 등 낚시용품을 합리적인 가격으로. 5만원 이상 무료배송.";
+const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
+const SITE_DESC = "낚싯대, 릴, 라인, 루어, 채비 등 낚시용품을 합리적인 가격으로. 3만원 이상 무료배송.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

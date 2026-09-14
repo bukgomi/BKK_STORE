@@ -1,9 +1,11 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type Props = { email: string; verified: boolean; verifiedAt: string | null; sentAt: string | null };
 
 export default function EmailVerifySection({ email, verified, verifiedAt, sentAt }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -14,6 +16,7 @@ export default function EmailVerifySection({ email, verified, verifiedAt, sentAt
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setMsg({ ok: true, text: `${email} 으로 인증 메일을 발송했습니다. 24시간 이내 메일의 링크를 클릭해주세요.` });
+      router.refresh(); // 페이지의 최근 변경/발송 일시 갱신
     } catch (e: any) { setMsg({ ok: false, text: e.message }); }
     finally { setLoading(false); }
   };

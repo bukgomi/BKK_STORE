@@ -76,7 +76,7 @@ export default function MobileNav({ categories, user, isAdmin }: Props) {
               <Section title="카테고리">
                 <Item href="/products" onClick={() => setOpen(false)}>전체상품</Item>
                 <Item href="/categories" onClick={() => setOpen(false)}>카테고리 모아보기</Item>
-                {categories.map((c) => (
+                {categories.filter((c) => c.slug !== "uncategorized").map((c) => (
                   <Item key={c.id} href={`/category/${c.slug}`} onClick={() => setOpen(false)}>
                     {c.name}
                   </Item>
@@ -87,6 +87,9 @@ export default function MobileNav({ categories, user, isAdmin }: Props) {
                 <Item href="/products?sort=new" onClick={() => setOpen(false)}>신상품</Item>
                 <Item href="/products?sort=best" onClick={() => setOpen(false)}>베스트</Item>
                 <Item href="/products?sale=1" onClick={() => setOpen(false)} accent>할인특가</Item>
+                <Item href="/rigs" onClick={() => setOpen(false)}>시즌·어종별 채비도</Item>
+                <Item href="/event" onClick={() => setOpen(false)}>기획전 / 이벤트</Item>
+                <Item href="/notice" onClick={() => setOpen(false)}>공지사항</Item>
               </Section>
 
               {user && (

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useShippingPolicy } from "@/lib/use-shipping-policy";
+import { calcShippingFee } from "@/lib/shipping";
 import { useCart } from "@/store/cart";
 import { toast } from "@/store/toast";
 import { formatKRW } from "@/lib/utils";
@@ -57,8 +59,9 @@ export default function CheckoutPage() {
   }, []);
 
   // 모든 훅을 조건부 리턴 위에서 호출 (React hooks 규칙)
+  const policy = useShippingPolicy();
   const subtotal = totalPrice();
-  const shipping = subtotal >= 50000 ? 0 : 3000;
+  const shipping = calcShippingFee(subtotal, policy);
 
   const selectedCoupon = useMemo(
     () => me?.coupons.find((c) => c.id === selectedCouponId) || null,

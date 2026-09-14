@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatKRW } from "@/lib/utils";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from "@/lib/order-status";
-import { getAdminEmails } from "@/lib/admin-guard";
+import { getAdminEmails, requireAdmin } from "@/lib/admin-guard";
 import UserRoleEditor from "./UserRoleEditor";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminUserDetailPage({ params }: { params: { id: string } }) {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const user = await prisma.user.findUnique({
     where: { id: params.id },
     include: {

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "개인정보처리방침 | 낚시몰",
-  description: "낚시몰 개인정보처리방침 안내",
+  title: "개인정보처리방침 | 탑캐스팅",
+  description: "탑캐스팅 개인정보처리방침 안내",
 };
 
-const COMPANY = process.env.NEXT_PUBLIC_BUSINESS_NAME || "낚시몰";
+const COMPANY = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
 const PRIVACY_OFFICER = process.env.NEXT_PUBLIC_PRIVACY_OFFICER || "홍길동";
 const PRIVACY_EMAIL = process.env.NEXT_PUBLIC_PRIVACY_EMAIL || "privacy@example.com";
 const CS_PHONE = process.env.NEXT_PUBLIC_CS_PHONE || "00-000-0000";

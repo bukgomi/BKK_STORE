@@ -18,9 +18,9 @@ import { cacheGet, cacheSet, cacheDel } from "@/lib/cache";
  */
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
-const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "낚시몰";
+const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
 const DEFAULT_DELIVERY_FEE = parseInt(process.env.NAVER_FEED_DEFAULT_DELIVERY_FEE || "3000", 10);
-const FREE_SHIPPING_THRESHOLD = parseInt(process.env.NAVER_FEED_FREE_SHIPPING_THRESHOLD || "50000", 10);
+const FREE_SHIPPING_THRESHOLD = parseInt(process.env.NAVER_FEED_FREE_SHIPPING_THRESHOLD || "30000", 10);
 const DEFAULT_NAVER_CATEGORY = process.env.NAVER_FEED_DEFAULT_CATEGORY || ""; // 네이버 쇼핑 카테고리 ID
 
 /**

@@ -16,7 +16,7 @@ export default async function NoticeListPage() {
     <div className="container-mall py-6 md:py-8">
       <header className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">공지사항</h1>
-        <p className="text-sm text-gray-500 mt-1">낚시몰의 새 소식, 이벤트, 안내 사항을 확인하세요.</p>
+        <p className="text-sm text-gray-500 mt-1">탑캐스팅의 새 소식, 이벤트, 안내 사항을 확인하세요.</p>
       </header>
 
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">

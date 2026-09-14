@@ -800,3 +800,60 @@ model SupportMessage {
 
   @@index([ticketId, createdAt])
 }
+
+/// 기획전/이벤트 게시물 — 메인 히어로 슬라이드·배너가 연결할 랜딩 페이지 (/event/[slug])
+model Promotion {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  /// 작은 라벨 (예: 시즌 특가)
+  eyebrow     String?
+  subtitle    String?
+  /// 커버 이미지 URL (히어로 슬라이드 배경으로도 사용)
+  coverImage  String?
+  /// 커버 이미지가 없을 때 쓰는 배경 그라디언트 클래스
+  bgClass     String?
+  /// 본문 HTML (관리자 편집기)
+  content     String   @default("") @db.Text
+  /// 함께 보여줄 상품 ID 목록 (순서 유지)
+  productIds  String[] @default([])
+  isPublished Boolean  @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  viewCount   Int      @default(0)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, createdAt])
+}
+
+/// 시즌·지역·어종별 채비도 (/rigs)
+model RigGuide {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  /// 어종 (예: 갑오징어)
+  species      String
+  speciesImage String?
+  /// 낚시 종류 키 (lib/rig.ts FISHING_TYPES)
+  fishingType  String
+  /// 지역 키 목록 (lib/rig.ts REGIONS)
+  regions      String[] @default([])
+  /// 시즌 월 (1~12)
+  months       Int[]    @default([])
+  summary      String?
+  /// 채비도 그림
+  diagramImage String?
+  /// 본문 HTML (팁, 운용법)
+  content      String   @default("") @db.Text
+  /// 구성품 [{ name, spec, productIds[] }]
+  components   Json     @default("[]")
+  sortOrder    Int      @default(0)
+  isPublished  Boolean  @default(true)
+  viewCount    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isPublished, species])
+}

@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, AdminCard, EmptyState, StatusBadge, DataTable } from "@/components/admin/AdminUI";
@@ -24,6 +25,7 @@ function actionTone(action: string): "success" | "warning" | "danger" | "info" |
 export default async function AdminAuditPage({ searchParams }: {
   searchParams: { page?: string; action?: string; actor?: string; target?: string };
 }) {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const page = Math.max(1, parseInt(searchParams.page || "1", 10));
   const actionFilter = searchParams.action || "";
   const actorFilter = searchParams.actor || "";

@@ -16,10 +16,13 @@ const SUPPORT = [
   { href: "/guest-orders", label: "비회원 주문조회" },
   { href: "/support", label: "1:1 문의" },
   { href: "/faq", label: "자주 묻는 질문" },
+  { href: "/notice", label: "공지사항" },
+  { href: "/event", label: "기획전 / 이벤트" },
+  { href: "/rigs", label: "어종별 채비도" },
 ];
 
 const ENV_DEFAULTS = {
-  name:        process.env.NEXT_PUBLIC_BUSINESS_NAME       || "(주)낚시몰",
+  name:        process.env.NEXT_PUBLIC_BUSINESS_NAME       || "탑캐스팅",
   ceo:         process.env.NEXT_PUBLIC_BUSINESS_CEO        || "홍길동",
   bizNo:       process.env.NEXT_PUBLIC_BUSINESS_NO         || "000-00-00000",
   ecommNo:     process.env.NEXT_PUBLIC_ECOMM_REG_NO        || "제0000-서울XX-0000호",

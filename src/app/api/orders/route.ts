@@ -7,6 +7,8 @@ import { generateOrderNo } from "@/lib/utils";
 import { calcCouponDiscount, validateCouponForOrder } from "@/lib/coupon";
 import { encrypt } from "@/lib/crypto";
 import { checkIdempotency, saveIdempotency } from "@/lib/idempotency";
+import { getSiteSettings } from "@/lib/site-settings";
+import { calcShippingFee, SHIPPING_FEE } from "@/lib/shipping";
 
 const PENDING_TTL_MS = 30 * 60 * 1000; // 30분 만료
 
@@ -81,7 +83,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const shippingFee = itemsAmount >= 50000 ? 0 : 3000;
+    const shippingFee = calcShippingFee(itemsAmount, { shippingFee: SHIPPING_FEE, freeShippingMin: (await getSiteSettings()).freeShippingMin });
 
     // 쿠폰 적용
     let couponId: string | null = null;

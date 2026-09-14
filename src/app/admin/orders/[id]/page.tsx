@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +10,7 @@ import TrackingViewer from "@/components/TrackingViewer";
 export const dynamic = "force-dynamic";
 
 export default async function AdminOrderDetailPage({ params }: { params: { id: string } }) {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const order = await prisma.order.findUnique({
     where: { id: params.id },
     include: { items: true, user: true },

@@ -10,6 +10,7 @@ export type Slide = {
   cta: string;
   bgClass?: string;      // tailwind 그라디언트
   image?: string;        // 배경 이미지 URL (지정시 그라디언트 위에 어둡게 오버레이)
+  imageOnly?: boolean;   // true 면 문구·버튼·오버레이 없이 이미지만
   textClass?: string;
 };
 
@@ -18,7 +19,7 @@ const DEFAULT_SLIDES: Slide[] = [
     href: "/products?sale=1",
     eyebrow: "시즌 특가",
     title: "봄 시즌 낚시용품 대전",
-    subtitle: "최대 30% 할인 · 무료배송 5만원 이상",
+    subtitle: "최대 30% 할인 · 무료배송 3만원 이상",
     cta: "할인상품 보러가기",
     bgClass: "bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500",
   },
@@ -55,11 +56,36 @@ export default function HeroCarousel({ slides = DEFAULT_SLIDES }: { slides?: Sli
 
   const go = (i: number) => setIdx((i + slides.length) % slides.length);
 
+  // 모바일 스와이프: 가로로 40px 이상 밀면 이전/다음 슬라이드. 스와이프한 직후의 클릭은 링크 이동으로 치지 않는다
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touch.current = { x: t.clientX, y: t.clientY };
+    swiped.current = false;
+    setPaused(true);
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const st = touch.current;
+    touch.current = null;
+    setPaused(false);
+    if (!st) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - st.x, dy = t.clientY - st.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      swiped.current = true;
+      go(idx + (dx < 0 ? 1 : -1));
+    }
+  };
+
   return (
     <div
-      className="relative h-56 sm:h-72 lg:h-80 rounded-xl overflow-hidden"
+      className="relative h-56 sm:h-72 lg:h-80 rounded-xl overflow-hidden touch-pan-y select-none"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={() => { touch.current = null; setPaused(false); }}
     >
       {slides.map((s, i) => (
         <Link
@@ -67,6 +93,8 @@ export default function HeroCarousel({ slides = DEFAULT_SLIDES }: { slides?: Sli
           href={s.href}
           aria-hidden={i !== idx}
           tabIndex={i === idx ? 0 : -1}
+          draggable={false}
+          onClick={(e) => { if (swiped.current) { e.preventDefault(); swiped.current = false; } }}
           className={`absolute inset-0 flex items-center px-6 sm:px-10 lg:px-14 ${s.bgClass || "bg-brand-500"} text-white transition-opacity duration-700 overflow-hidden ${
             i === idx ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
@@ -74,11 +102,11 @@ export default function HeroCarousel({ slides = DEFAULT_SLIDES }: { slides?: Sli
           {s.image && (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={s.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/45" />
+              <img src={s.image} alt={s.imageOnly ? s.title : ""} className="absolute inset-0 w-full h-full object-cover" />
+              {!s.imageOnly && <div className="absolute inset-0 bg-black/45" />}
             </>
           )}
-          <div className="relative">
+          <div className={`relative ${s.imageOnly && s.image ? "hidden" : ""}`}>
             <div className="text-xs sm:text-sm opacity-80">{s.eyebrow}</div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mt-1.5 leading-tight">{s.title}</h2>
             {s.subtitle && <p className="mt-2 sm:mt-3 text-sm sm:text-base opacity-90">{s.subtitle}</p>}

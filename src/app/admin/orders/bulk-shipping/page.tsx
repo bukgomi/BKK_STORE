@@ -1,9 +1,11 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import BulkShippingUploader from "./BulkShippingUploader";
 
 export const dynamic = "force-dynamic";
 
-export default function BulkShippingPage() {
+export default async function BulkShippingPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   return (
     <div className="space-y-4">
       <nav className="text-xs text-gray-500">

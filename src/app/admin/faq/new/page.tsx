@@ -1,7 +1,9 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import { PageHeader } from "@/components/admin/AdminUI";
 import FaqForm from "../FaqForm";
 
-export default function AdminFaqNewPage() {
+export default async function AdminFaqNewPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   return (
     <div className="max-w-3xl">
       <PageHeader

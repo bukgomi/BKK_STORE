@@ -85,7 +85,12 @@ export function middleware(req: NextRequest) {
     );
   }
 
-  const res = NextResponse.next();
+  // NextAuth(AUTH_TRUST_HOST=true) 가 요청의 실제 호스트/프로토콜로 인증 URL 과 쿠키(secure 여부)를 정한다.
+  // 프록시(Caddy) 뒤에서는 x-forwarded-* 가 오지만, localhost 로 직접 접속하면 없으므로 여기서 채워 준다.
+  const reqHeaders = new Headers(req.headers);
+  if (!reqHeaders.get("x-forwarded-proto")) reqHeaders.set("x-forwarded-proto", req.nextUrl.protocol.replace(":", ""));
+  if (!reqHeaders.get("x-forwarded-host")) reqHeaders.set("x-forwarded-host", req.headers.get("host") || req.nextUrl.host);
+  const res = NextResponse.next({ request: { headers: reqHeaders } });
 
   // 결제 SDK / 주소 검색 / 추적 API / OAuth 등을 위해 외부 도메인 일부 허용
   const csp = [

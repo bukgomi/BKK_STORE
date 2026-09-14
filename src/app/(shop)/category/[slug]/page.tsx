@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import ProductCard from "@/components/ProductCard";
 import CategoryIcon from "@/components/CategoryIcon";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const cat = await prisma.category.findUnique({
@@ -18,11 +19,20 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function CategoryDetailPage({ params }: { params: { slug: string } }) {
+const PAGE_SIZE = 24;
+const SORT_OPTIONS = [
+  { value: "new", label: "신상품순" },
+  { value: "best", label: "인기순" },
+  { value: "reviews", label: "리뷰많은순" },
+  { value: "low", label: "낮은가격순" },
+  { value: "high", label: "높은가격순" },
+];
+
+export default async function CategoryDetailPage({ params, searchParams }: { params: { slug: string }; searchParams: { sort?: string; page?: string } }) {
   const category = await prisma.category.findUnique({
     where: { slug: params.slug },
     include: {
-      parent: true,
+      parent: { include: { children: { orderBy: { sortOrder: "asc" } } } },
       children: { orderBy: { sortOrder: "asc" } },
     },
   }).catch(() => null);
@@ -31,38 +41,38 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
 
   // 이 카테고리 + 자식 카테고리 ID 모두 (자식 상품도 포함)
   const categoryIds = [category.id, ...category.children.map((c) => c.id)];
+  // 하위 카테고리 칩: 상위면 자기 자식들, 하위면 같은 부모의 형제들 (다른 하위로 바로 이동 가능)
+  const chipParent = category.children.length > 0 ? category : category.parent;
+  const chipItems = category.children.length > 0 ? category.children : (category.parent?.children ?? []);
 
-  const [featured, newest, best, totalCount] = await Promise.all([
-    // 추천
+  const sort = searchParams.sort || "new";
+  const page = Math.max(1, parseInt(searchParams.page || "1", 10) || 1);
+  let orderBy: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] = { createdAt: "desc" };
+  if (sort === "low") orderBy = [{ salePrice: "asc" }, { price: "asc" }];
+  else if (sort === "high") orderBy = [{ salePrice: "desc" }, { price: "desc" }];
+  else if (sort === "best") orderBy = [{ isFeatured: "desc" }, { reviews: { _count: "desc" } }, { createdAt: "desc" }];
+  else if (sort === "reviews") orderBy = { reviews: { _count: "desc" } };
+
+  const where = { isActive: true, categoryId: { in: categoryIds } };
+  const [items, totalCount] = await Promise.all([
     prisma.product.findMany({
-      where: { isActive: true, isFeatured: true, categoryId: { in: categoryIds } },
-      take: 4,
-      orderBy: { createdAt: "desc" },
-    }).catch(() => []),
-    // 신상품 8개
-    prisma.product.findMany({
-      where: { isActive: true, categoryId: { in: categoryIds } },
-      take: 8,
-      orderBy: { createdAt: "desc" },
-    }).catch(() => []),
-    // 베스트 (리뷰 많은 순) 4개
-    prisma.product.findMany({
-      where: { isActive: true, categoryId: { in: categoryIds } },
-      take: 4,
-      orderBy: [{ reviews: { _count: "desc" } }, { isFeatured: "desc" }],
+      where, orderBy, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE,
       include: {
         _count: { select: { reviews: { where: { isHidden: false } } } },
         reviews: { where: { isHidden: false }, select: { rating: true } },
       },
     }).catch(() => []),
-    prisma.product.count({ where: { isActive: true, categoryId: { in: categoryIds } } }).catch(() => 0),
+    prisma.product.count({ where }).catch(() => 0),
   ]);
-
-  const bestWithRating = best.map((p: any) => {
-    const sum = p.reviews.reduce((s: number, r: any) => s + r.rating, 0);
-    const avg = p.reviews.length > 0 ? sum / p.reviews.length : 0;
-    return { ...p, _avgRating: Math.round(avg * 10) / 10, _reviewCount: p._count.reviews };
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const products = items.map((p) => {
+    const sum = p.reviews.reduce((a, r) => a + r.rating, 0);
+    return { ...p, _avgRating: p.reviews.length ? Math.round((sum / p.reviews.length) * 10) / 10 : 0, _reviewCount: p._count.reviews };
   });
+  const pageHref = (n: number, srt = sort) => {
+    const qs = new URLSearchParams({ ...(srt !== "new" ? { sort: srt } : {}), ...(n > 1 ? { page: String(n) } : {}) }).toString();
+    return `/category/${category.slug}${qs ? `?${qs}` : ""}`;
+  };
 
   return (
     <div>
@@ -109,21 +119,21 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
 
       <div className="container-mall py-6 md:py-8 space-y-10">
         {/* 하위 카테고리 */}
-        {category.children.length > 0 && (
+        {chipParent && chipItems.length > 0 && (
           <section>
-            <h2 className="text-sm font-bold text-gray-400 tracking-wider uppercase mb-3">하위 카테고리</h2>
+            <h2 className="text-sm font-bold text-gray-400 tracking-wider uppercase mb-3">{chipParent.name} 하위 카테고리</h2>
             <div className="flex flex-wrap gap-2">
               <Link
-                href={`/products?category=${category.slug}`}
-                className="px-4 h-9 inline-flex items-center rounded-full bg-brand-500 text-white text-sm font-medium hover:bg-brand-600"
+                href={chipParent.id === category.id ? `/products?category=${category.slug}` : `/category/${chipParent.slug}`}
+                className={`px-4 h-9 inline-flex items-center rounded-full text-sm font-medium ${chipParent.id === category.id ? "bg-brand-500 text-white hover:bg-brand-600" : "bg-white border border-gray-300 text-gray-700 hover:border-brand-500 hover:text-brand-600"}`}
               >
-                전체보기
+                {chipParent.id === category.id ? "전체보기" : `${chipParent.name} 전체`}
               </Link>
-              {category.children.map((sub) => (
+              {chipItems.map((sub) => (
                 <Link
                   key={sub.id}
                   href={`/category/${sub.slug}`}
-                  className="px-4 h-9 inline-flex items-center rounded-full bg-white border border-gray-300 text-gray-700 text-sm hover:border-brand-500 hover:text-brand-600"
+                  className={`px-4 h-9 inline-flex items-center rounded-full text-sm ${sub.id === category.id ? "bg-brand-500 text-white font-medium hover:bg-brand-600" : "bg-white border border-gray-300 text-gray-700 hover:border-brand-500 hover:text-brand-600"}`}
                 >
                   {sub.name}
                 </Link>
@@ -132,92 +142,45 @@ export default async function CategoryDetailPage({ params }: { params: { slug: s
           </section>
         )}
 
-        {totalCount === 0 ? (
-          <div className="py-20 text-center text-gray-500 border border-dashed border-gray-300 rounded-lg">
-            <div className="text-4xl mb-2">📭</div>
-            <p>이 카테고리에 등록된 상품이 없습니다.</p>
-            <Link href="/products" className="btn-outline mt-4 inline-flex">전체 상품 보러가기</Link>
-          </div>
-        ) : (
-          <>
-            {/* 베스트 */}
-            {bestWithRating.length > 0 && (
-              <section>
-                <SectionHeader
-                  title={`🔥 ${category.name} 베스트`}
-                  subtitle="가장 많은 리뷰가 달린 인기 상품"
-                  href={`/products?category=${category.slug}&sort=best`}
-                />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-                  {bestWithRating.map((p, i) => (
-                    <ProductCard
-                      key={p.id}
-                      {...p}
-                      rank={i + 1}
-                      rating={p._avgRating}
-                      reviewCount={p._reviewCount}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* 추천 */}
-            {featured.length > 0 && (
-              <section>
-                <SectionHeader
-                  title={`MD 추천 ${category.name}`}
-                  subtitle="이번 주 MD가 직접 고른 추천 상품"
-                  href={`/products?category=${category.slug}`}
-                />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-                  {featured.map((p) => (
-                    <ProductCard key={p.id} {...p} isFeatured />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* 신상품 */}
-            {newest.length > 0 && (
-              <section>
-                <SectionHeader
-                  title={`신상품 ${category.name}`}
-                  subtitle="새로 입고된 상품"
-                  href={`/products?category=${category.slug}&sort=new`}
-                />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-                  {newest.map((p) => (
-                    <ProductCard key={p.id} {...p} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* 전체 보기 CTA */}
-            <div className="text-center pt-4">
-              <Link
-                href={`/products?category=${category.slug}`}
-                className="btn-primary px-8"
-              >
-                {category.name} 전체 {totalCount.toLocaleString()}개 보기 →
-              </Link>
+        {/* 전체 상품 목록 */}
+        <section>
+          <div className="flex flex-wrap items-end justify-between gap-2 mb-4">
+            <h2 className="text-2xl font-bold tracking-tight">{category.name} 전체 상품 <span className="text-base font-normal text-gray-500">총 {totalCount.toLocaleString()}개</span></h2>
+            <div className="flex items-center gap-3 text-sm">
+              {SORT_OPTIONS.map((opt) => (
+                <Link key={opt.value} href={pageHref(1, opt.value)} className={sort === opt.value ? "text-brand-600 font-semibold" : "text-gray-500 hover:text-brand-600"}>
+                  {opt.label}
+                </Link>
+              ))}
             </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+          </div>
 
-function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
-  return (
-    <div className="flex items-end justify-between mb-4">
-      <div>
-        <h2 className="text-xl font-bold tracking-tight">{title}</h2>
-        {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+          {totalCount === 0 ? (
+            <div className="py-20 text-center text-gray-500 border border-dashed border-gray-300 rounded-lg">
+              <div className="text-4xl mb-2">📭</div>
+              <p>이 카테고리에 등록된 상품이 없습니다.</p>
+              <Link href="/products" className="btn-outline mt-4 inline-flex">전체 상품 보러가기</Link>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+                {products.map((p) => (
+                  <ProductCard key={p.id} {...p} rating={p._avgRating} reviewCount={p._reviewCount} />
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <nav className="flex items-center justify-center gap-1 mt-8" aria-label="페이지">
+                  {page > 1 && <Link href={pageHref(page - 1)} className="px-3 h-9 inline-flex items-center rounded border border-gray-300 text-sm hover:border-brand-500">‹ 이전</Link>}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <Link key={n} href={pageHref(n)} className={`w-9 h-9 inline-flex items-center justify-center rounded text-sm ${n === page ? "bg-brand-600 text-white font-bold" : "border border-gray-300 hover:border-brand-500"}`}>{n}</Link>
+                  ))}
+                  {page < totalPages && <Link href={pageHref(page + 1)} className="px-3 h-9 inline-flex items-center rounded border border-gray-300 text-sm hover:border-brand-500">다음 ›</Link>}
+                </nav>
+              )}
+            </>
+          )}
+        </section>
       </div>
-      <Link href={href} className="text-sm text-gray-500 hover:text-brand-600 shrink-0">더보기 →</Link>
     </div>
   );
 }

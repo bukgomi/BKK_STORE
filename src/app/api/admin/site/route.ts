@@ -19,6 +19,7 @@ const heroSlideSchema = z.object({
   href: safeHref(200).refine((v) => v.length > 0, { message: "링크를 입력해주세요." }),
   bgClass: z.string().max(200).optional().or(z.literal("")),
   image: z.string().max(500).optional().or(z.literal("")),
+  imageOnly: z.boolean().optional(),
 });
 
 const sideBannerSchema = z.object({

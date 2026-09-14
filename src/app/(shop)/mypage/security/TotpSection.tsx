@@ -147,7 +147,7 @@ export default function TotpSection({ enabled, enabledAt }: Props) {
           ))}
         </div>
       </div>
-      <button onClick={() => router.refresh()} className="btn-primary h-10 text-sm">완료</button>
+      <button onClick={() => { setStep("idle"); router.refresh(); }} className="btn-primary h-10 text-sm">완료</button>
     </div>
   );
 }

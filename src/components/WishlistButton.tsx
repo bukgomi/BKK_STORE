@@ -12,10 +12,13 @@ export default function WishlistButton({
   productId,
   initialActive,
   signedIn,
+  variant = "icon",
 }: {
   productId: string;
   initialActive: boolean;
   signedIn: boolean;
+  /** icon: 둥근 하트 아이콘 / wide: "찜하기" 글자가 있는 넓은 버튼 (구매 패널용) */
+  variant?: "icon" | "wide";
 }) {
   const router = useRouter();
   const has = useWishlist((s) => s.ids.has(productId));
@@ -49,6 +52,29 @@ export default function WishlistButton({
     }
     router.refresh();
   };
+
+  const heart = (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill={has ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+
+  if (variant === "wide") {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={pending}
+        aria-pressed={has}
+        className={`h-12 w-full rounded-lg border flex items-center justify-center gap-2 text-base font-medium transition-colors ${
+          has ? "border-rose-300 bg-rose-50 text-rose-500" : "border-gray-300 text-gray-800 hover:border-gray-400 bg-white"
+        } ${pending ? "opacity-60" : ""}`}
+      >
+        <span className={has ? "text-rose-500" : "text-gray-500"}>{heart}</span>
+        {has ? "찜 완료" : "찜하기"}
+      </button>
+    );
+  }
 
   return (
     <button

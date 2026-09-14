@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import CategoryShortcut from "@/components/CategoryShortcut";
+import BenefitSidebar from "@/components/BenefitSidebar";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export const revalidate = 60;
@@ -10,7 +11,7 @@ export const revalidate = 60;
 export default async function HomePage() {
   const settings = await getSiteSettings();
 
-  const [featured, newest, best, categories] = await Promise.all([
+  const [featured, newest, best, categories, sale] = await Promise.all([
     settings.showFeaturedSection
       ? prisma.product
           .findMany({
@@ -53,6 +54,14 @@ export default async function HomePage() {
           })
           .catch(() => [])
       : Promise.resolve([]),
+    // 할인특가: 할인가가 설정된 상품 (있을 때만 섹션 노출)
+    prisma.product
+      .findMany({
+        where: { isActive: true, salePrice: { not: null } },
+        take: 8,
+        orderBy: { updatedAt: "desc" },
+      })
+      .catch(() => []),
   ]);
 
   const bestWithRating = best.map((p: any) => {
@@ -60,6 +69,12 @@ export default async function HomePage() {
     const avg = p.reviews.length > 0 ? sum / p.reviews.length : 0;
     return { ...p, _avgRating: Math.round(avg * 10) / 10, _reviewCount: p._count.reviews };
   });
+
+  const benefits = [
+    { icon: "🚚", title: `${settings.freeShippingMin.toLocaleString()}원 이상 무료배송`, desc: "전 상품 빠른 배송" },
+    { icon: "💎", title: "구매 1% 적립", desc: "포인트 즉시 사용 가능" },
+    { icon: "✍️", title: "리뷰 작성 시 적립", desc: "포토 리뷰 추가 적립" },
+  ];
 
   const isEmpty = featured.length === 0 && newest.length === 0 && bestWithRating.length === 0;
 
@@ -96,14 +111,13 @@ export default async function HomePage() {
 
       {/* 카테고리 쇼트컷 */}
       {settings.showCategoryShortcut && categories.length > 0 && (
-        <CategoryShortcut categories={categories} />
+        <CategoryShortcut categories={[...categories.filter((c) => c.slug !== "uncategorized"), { id: "rigs", name: "채비도", slug: "rigs", iconEmoji: "🎣", href: "/rigs" }]} />
       )}
 
-      {/* 혜택 띠 */}
-      <section className="grid grid-cols-3 gap-2 md:gap-4 text-center">
-        <Benefit icon="🚚" title={`${settings.freeShippingMin.toLocaleString()}원 이상 무료배송`} desc="전 상품 빠른 배송" />
-        <Benefit icon="💎" title="구매 1% 적립" desc="포인트 즉시 사용 가능" />
-        <Benefit icon="✍️" title="리뷰 작성 시 적립" desc="포토 리뷰 추가 적립" />
+      {/* 혜택 안내: 넓은 화면은 좌측 고정 패널, 그 이하는 본문 띠 */}
+      <BenefitSidebar items={benefits} />
+      <section className="grid grid-cols-3 gap-2 md:gap-4 text-center min-[1640px]:hidden">
+        {benefits.map((b) => <Benefit key={b.title} {...b} />)}
       </section>
 
       {isEmpty && <EmptyState />}
@@ -121,6 +135,18 @@ export default async function HomePage() {
                 rating={p._avgRating}
                 reviewCount={p._reviewCount}
               />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 할인특가 */}
+      {sale.length > 0 && (
+        <section>
+          <SectionHeader title="🏷️ 할인특가" subtitle="지금 특별 할인 중인 상품" href="/products?sale=1" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
+            {sale.map((p) => (
+              <ProductCard key={p.id} {...p} />
             ))}
           </div>
         </section>

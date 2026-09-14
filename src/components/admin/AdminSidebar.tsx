@@ -38,6 +38,8 @@ const SECTIONS: NavSection[] = [
     title: "콘텐츠",
     items: [
       { href: "/admin/site", label: "사이트 설정", icon: "🎨" },
+      { href: "/admin/promotions", label: "기획전 / 이벤트", icon: "🎯" },
+      { href: "/admin/rigs", label: "채비도", icon: "🎣" },
       { href: "/admin/notices", label: "공지사항", icon: "📢" },
       { href: "/admin/faq", label: "FAQ", icon: "❓" },
     ],
@@ -130,10 +132,12 @@ function SidebarContent({
   return (
     <>
       <div className="px-5 py-5 border-b border-gray-800 shrink-0">
-        <Link href="/admin" className="text-lg font-bold text-white">
-          낚시몰 <span className="text-brand-500">Admin</span>
+        <Link href="/admin" className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logo.png?v=3" alt="TOPCASTING TPIAA" className="h-11 w-auto" />
+          <span className="text-sm font-bold text-brand-400">Admin</span>
         </Link>
-        <p className="text-[11px] text-gray-400 mt-0.5">관리자 페이지</p>
+        <p className="text-[11px] text-gray-400 mt-1">탑캐스팅 관리자 페이지</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3">

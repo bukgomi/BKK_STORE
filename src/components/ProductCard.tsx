@@ -49,7 +49,8 @@ export default function ProductCard({
         />
 
         {/* 뱃지 영역 */}
-        <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+        {/* 순위 배지(좌상단 36px)가 있으면 그 아래로 내려서 겹치지 않게 */}
+        <div className={`absolute left-2 flex flex-col items-start gap-1 ${rank !== undefined && rank > 0 ? "top-11" : "top-2"}`}>
           {discount > 0 && <span className="badge-sale">{discount}%</span>}
           {isFeatured && <span className="badge-best">BEST</span>}
           {isNew && <span className="badge-new">NEW</span>}
@@ -75,12 +76,12 @@ export default function ProductCard({
 
       <div className="mt-2.5 px-0.5">
         {brand && <div className="text-xs text-gray-500 truncate">{brand}</div>}
-        <div className="text-sm text-gray-800 line-clamp-2 leading-snug min-h-[2.5em] group-hover:text-brand-600 transition-colors">
+        <div className="text-[15px] text-gray-800 line-clamp-2 leading-snug group-hover:text-brand-600 transition-colors">
           {name}
         </div>
         <div className="mt-1 flex items-baseline gap-2">
-          {discount > 0 && <span className="text-accent-500 font-bold text-sm">{discount}%</span>}
-          <span className="text-base font-extrabold text-gray-900">{formatKRW(finalPrice)}</span>
+          {discount > 0 && <span className="text-accent-500 font-bold text-base">{discount}%</span>}
+          <span className="text-xl font-extrabold text-gray-900">{formatKRW(finalPrice)}</span>
         </div>
         {discount > 0 && (
           <div className="text-xs text-gray-400 line-through">{formatKRW(price)}</div>

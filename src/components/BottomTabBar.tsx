@@ -21,6 +21,8 @@ export default function BottomTabBar() {
 
   // 관리자 영역에서는 숨김
   if (pathname.startsWith("/admin")) return null;
+  // 상품 상세에서는 구매 바(MobilePurchaseBar)가 하단을 차지한다
+  if (/^\/products\/[^/]+$/.test(pathname)) return null;
 
   return (
     <nav

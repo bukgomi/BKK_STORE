@@ -14,7 +14,9 @@ import HeaderSearch from "./HeaderSearch";
 export default async function Header() {
   const session = await getServerSession(authOptions);
   const user = session?.user;
-  const admin = isAdminEmail(user?.email);
+  // 이메일 화이트리스트 또는 DB role(ADMIN/SUPER_ADMIN) — 관리자 화면에서 승격된 회원도 링크가 보이도록
+  const role = (user as any)?.role as string | undefined;
+  const admin = isAdminEmail(user?.email) || role === "ADMIN" || role === "SUPER_ADMIN";
 
   // 모바일 드로어용 카테고리 (서버 사이드에서 1번 쿼리)
   const categories = await prisma.category
@@ -26,7 +28,8 @@ export default async function Header() {
     .catch(() => []);
 
   return (
-    <header className="border-b border-gray-200 bg-white sticky top-0 z-40">
+    <>
+    <header className="border-b border-gray-200 bg-white sticky top-0 z-40 md:static">
       {/* 사이트 고지 띠 (관리자 설정 기반) */}
       <NoticeBar />
 
@@ -51,6 +54,9 @@ export default async function Header() {
               <Link href="/mypage" className="hover:text-brand-600">주문조회</Link>
             </>
           )}
+          <Link href="/rigs" className="hover:text-brand-600">채비도</Link>
+          <Link href="/event" className="hover:text-brand-600">기획전</Link>
+          <Link href="/notice" className="hover:text-brand-600">공지사항</Link>
           <Link href="/support" className="hover:text-brand-600">고객센터</Link>
         </div>
       </div>
@@ -64,9 +70,9 @@ export default async function Header() {
           isAdmin={admin}
         />
 
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl md:text-2xl font-extrabold text-brand-600 tracking-tight">낚시몰</span>
-          <span className="hidden md:inline text-xs text-gray-500">FISHING MALL</span>
+        <Link href="/" className="flex items-center shrink-0" aria-label="탑캐스팅 홈">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logo.png?v=3" alt="TOPCASTING TPIAA" className="h-12 md:h-20 w-auto" />
         </Link>
 
         {/* 데스크톱 검색바 (자동완성 클라이언트 컴포넌트) */}
@@ -115,10 +121,9 @@ export default async function Header() {
         </div>
       </div>
 
-      {/* 카테고리 네비게이션 (데스크톱 전용) */}
-      <div className="hidden md:block">
-        <CategoryNav />
-      </div>
     </header>
+    {/* 데스크톱: 카테고리 메뉴만 화면 상단에 고정 (헤더 전체 고정 시 화면을 너무 많이 가림) */}
+    <CategoryNav />
+    </>
   );
 }

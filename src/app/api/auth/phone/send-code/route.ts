@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     const result = await sendSms({
       to: phone,
-      message: `[낚시몰] 인증번호 [${code}] 를 입력해주세요. (5분 이내)`,
+      message: `[탑캐스팅] 인증번호 [${code}] 를 입력해주세요. (5분 이내)`,
     });
 
     if (!result.ok) {

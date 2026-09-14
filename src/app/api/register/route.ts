@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { checkPasswordStrength, getClientInfo, rateLimitAsync } from "@/lib/security";
 import { encrypt, hashPhone } from "@/lib/crypto";
 import { validateUsernameFormat, normalizeUsername } from "@/lib/username";
+import { findPhoneOwner, describeMethods } from "@/lib/phone-dup";
 
 const Schema = z.object({
   username: z.string().min(4).max(20),
@@ -51,6 +52,14 @@ export async function POST(req: NextRequest) {
     const passwordHash = await bcrypt.hash(data.password, 12);
 
     const phoneRaw = data.phone?.replace(/[^0-9]/g, "") || null;
+    // 같은 휴대폰 번호로 이미 가입된 회원이 있으면 중복 가입 안내 (소셜 가입 포함)
+    if (phoneRaw) {
+      const owner = await findPhoneOwner(phoneRaw);
+      if (owner) {
+        const how = describeMethods(owner.methods);
+        return NextResponse.json({ error: `이미 이 휴대폰 번호로 가입된 계정이 있습니다. (${how} 로그인${owner.hint ? `, 아이디 ${owner.hint}` : ""}) 아이디/비밀번호 찾기를 이용해 주세요.` }, { status: 409 });
+      }
+    }
     const phoneEnc = phoneRaw ? encrypt(phoneRaw) : null;
     const phoneHash = phoneRaw ? hashPhone(phoneRaw) : null;
 

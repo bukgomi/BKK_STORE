@@ -55,7 +55,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: SP 
     { brand: { contains: q, mode: "insensitive" } },
     { sku:   { contains: q, mode: "insensitive" } },
   ];
-  if (category) where.category = { slug: category };
+  // 상위 카테고리 slug 면 그 하위 카테고리의 상품까지 포함
+  if (category) where.category = { OR: [{ slug: category }, { parent: { slug: category } }] };
   if (sale) where.salePrice = { not: null };
   if (inStock) where.OR = [{ stock: { gt: 0 } }, { variants: { some: { stock: { gt: 0 } } } }];
   if (Number.isFinite(minPrice) && minPrice >= 0) where.price = { ...(where.price as object || {}), gte: minPrice };
@@ -91,9 +92,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: SP 
       },
     }).catch(() => []),
     prisma.product.count({ where }).catch(() => 0),
-    prisma.category.findMany({ where: { parentId: null }, orderBy: { sortOrder: "asc" } }).catch(() => []),
+    prisma.category.findMany({ where: { parentId: null }, orderBy: { sortOrder: "asc" }, include: { children: { orderBy: { sortOrder: "asc" } } } }).catch(() => []),
     prisma.product.findMany({
-      where: { isActive: true, brand: { not: null }, ...(category ? { category: { slug: category } } : {}) },
+      where: { isActive: true, brand: { not: null }, ...(category ? { category: { OR: [{ slug: category }, { parent: { slug: category } }] } } : {}) },
       select: { brand: true },
       distinct: ["brand"],
       take: 50,
@@ -101,7 +102,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: SP 
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const currentCategoryName = categories.find((c) => c.slug === category)?.name;
+  const allCategories = categories.flatMap((c) => [c, ...c.children.map((ch) => ({ ...ch, children: [] as typeof c.children }))]);
+  const currentCategoryName = allCategories.find((c) => c.slug === category)?.name;
+  // 사이드바에서 펼쳐 보여줄 상위 카테고리 (선택된 것이 하위면 그 부모)
+  const openTopSlug = categories.find((c) => c.slug === category || c.children.some((ch) => ch.slug === category))?.slug;
   const availableBrands = brandList.map((b) => b.brand).filter(Boolean) as string[];
 
   let displayItems = items.map((p) => {
@@ -141,6 +145,21 @@ export default async function ProductsPage({ searchParams }: { searchParams: SP 
               >
                 {c.name}
               </Link>
+              {/* 선택된 상위 카테고리는 하위 목록을 펼쳐서 다른 하위로 바로 이동 */}
+              {openTopSlug === c.slug && c.children.length > 0 && (
+                <ul className="mt-1 mb-1 ml-3 pl-2 border-l border-gray-200 space-y-1">
+                  {c.children.map((ch) => (
+                    <li key={ch.id}>
+                      <Link
+                        href={`/products?category=${ch.slug}`}
+                        className={`text-[13px] ${category === ch.slug ? "text-brand-600 font-semibold" : "text-gray-600 hover:text-brand-600"}`}
+                      >
+                        {ch.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>

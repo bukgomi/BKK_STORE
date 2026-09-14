@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/store/toast";
 import type { SiteSettings, HeroSlide, SideBanner } from "@/lib/site-settings";
+import LinkPicker from "@/components/admin/LinkPicker";
 
 const BG_PRESETS = [
   { label: "브랜드 블루", value: "bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500" },
@@ -143,7 +144,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           />
         </Field>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Field label="상호"><FooterInput k="name" settings={settings} setSettings={setSettings} ph="(주)낚시몰" /></Field>
+          <Field label="상호"><FooterInput k="name" settings={settings} setSettings={setSettings} ph="탑캐스팅" /></Field>
           <Field label="대표자"><FooterInput k="ceo" settings={settings} setSettings={setSettings} ph="홍길동" /></Field>
           <Field label="사업자등록번호"><FooterInput k="bizNo" settings={settings} setSettings={setSettings} ph="000-00-00000" /></Field>
           <Field label="통신판매업"><FooterInput k="ecommNo" settings={settings} setSettings={setSettings} ph="제0000-서울XX-0000호" /></Field>
@@ -188,6 +189,8 @@ function SlideEditor({ slides, onChange }: { slides: HeroSlide[]; onChange: (s: 
   };
   const setField = (i: number, key: keyof HeroSlide, value: string) =>
     onChange(slides.map((s, j) => j === i ? { ...s, [key]: value } : s));
+  const setFlag = (i: number, key: "imageOnly", value: boolean) =>
+    onChange(slides.map((s, j) => j === i ? { ...s, [key]: value } : s));
 
   return (
     <div className="space-y-3">
@@ -202,9 +205,9 @@ function SlideEditor({ slides, onChange }: { slides: HeroSlide[]; onChange: (s: 
           <div className={`${s.bgClass || "bg-brand-500"} text-white px-6 py-4 relative`}>
             {s.image && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={s.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+              <img src={s.image} alt="" className={`absolute inset-0 w-full h-full object-cover ${s.imageOnly ? "" : "opacity-40"}`} />
             )}
-            <div className="relative">
+            <div className={`relative ${s.imageOnly ? "invisible" : ""}`}>
               <div className="text-xs opacity-80">{s.eyebrow || "(eyebrow)"}</div>
               <div className="text-lg font-bold mt-1">{s.title || "(title)"}</div>
               {s.subtitle && <div className="text-xs opacity-90 mt-0.5">{s.subtitle}</div>}
@@ -239,8 +242,8 @@ function SlideEditor({ slides, onChange }: { slides: HeroSlide[]; onChange: (s: 
                 </Field>
               </div>
               <div className="md:col-span-2">
-                <Field label="링크 URL">
-                  <input value={s.href} onChange={(e) => setField(i, "href", e.target.value)} className="input" placeholder="/products?sale=1" />
+                <Field label="링크 (누르면 이동할 곳)">
+                  <LinkPicker value={s.href} onChange={(v) => setField(i, "href", v)} />
                 </Field>
               </div>
               <div className="md:col-span-2">
@@ -259,6 +262,10 @@ function SlideEditor({ slides, onChange }: { slides: HeroSlide[]; onChange: (s: 
                     onChange={(v) => setField(i, "image", v)}
                   />
                 </Field>
+                <label className="mt-2 flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={!!s.imageOnly} onChange={(e) => setFlag(i, "imageOnly", e.target.checked)} />
+                  이미지만 표시 <span className="text-xs text-gray-400">(문구·버튼·어두운 덮개 없이 배너 이미지 그대로. 브랜드 배너용)</span>
+                </label>
               </div>
             </div>
           </div>
@@ -296,7 +303,7 @@ function SideBannerEditor({ banners, onChange }: { banners: SideBanner[]; onChan
             <Field label="작은 라벨"><input value={b.eyebrow} onChange={(e) => setField(i, "eyebrow", e.target.value)} className="input" maxLength={40} /></Field>
             <Field label="이모지"><input value={b.emoji || ""} onChange={(e) => setField(i, "emoji", e.target.value)} className="input" maxLength={8} placeholder="🎁" /></Field>
             <div className="md:col-span-2"><Field label="제목"><input value={b.title} onChange={(e) => setField(i, "title", e.target.value)} className="input" maxLength={60} /></Field></div>
-            <div className="md:col-span-2"><Field label="링크"><input value={b.href} onChange={(e) => setField(i, "href", e.target.value)} className="input" /></Field></div>
+            <div className="md:col-span-2"><Field label="링크"><LinkPicker value={b.href} onChange={(v) => setField(i, "href", v)} /></Field></div>
             <div className="md:col-span-2"><Field label="배경"><PresetSelect value={b.bgClass || ""} onChange={(v) => setField(i, "bgClass", v)} options={BG_PRESETS} /></Field></div>
           </div>
           <Preview>

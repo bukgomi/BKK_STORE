@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 function check(pw: string) {
@@ -14,6 +15,7 @@ function check(pw: string) {
 }
 
 export default function ChangePasswordForm() {
+  const router = useRouter();
   const [cur, setCur] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -36,6 +38,7 @@ export default function ChangePasswordForm() {
       if (!res.ok) throw new Error(data.error || "변경 실패");
       setMsg({ ok: true, text: "비밀번호가 변경되었습니다. 다음 로그인부터 새 비밀번호를 사용해주세요." });
       setCur(""); setNext(""); setConfirm("");
+      router.refresh(); // 페이지의 최근 변경/발송 일시 갱신
     } catch (e: any) {
       setMsg({ ok: false, text: e.message });
     } finally {

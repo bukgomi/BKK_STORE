@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import CouponForm, { type CouponFormValue } from "@/components/admin/CouponForm";
 
@@ -10,7 +11,8 @@ function suggestCode(): string {
   return `COUP-${ym}-${rand}`;
 }
 
-export default function NewCouponPage() {
+export default async function NewCouponPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const today = new Date();
   const monthLater = new Date(); monthLater.setMonth(monthLater.getMonth() + 1);
   const fmt = (d: Date) => d.toISOString().slice(0, 10);

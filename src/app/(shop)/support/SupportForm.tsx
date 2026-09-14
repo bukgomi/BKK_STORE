@@ -33,6 +33,7 @@ export default function SupportForm() {
       if (!res.ok) throw new Error(data.error || "등록 실패");
       alert(`문의가 접수되었습니다. (${data.ticketNo})`);
       router.push(`/support/${data.id}`);
+      router.refresh(); // 목록(라우터 캐시)에 새 문의가 바로 보이도록
     } catch (e: any) {
       setErr(e.message);
     } finally {

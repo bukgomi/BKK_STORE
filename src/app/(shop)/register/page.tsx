@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "@/store/toast";
 import { validateUsernameFormat, normalizeUsername } from "@/lib/username";
@@ -131,7 +132,24 @@ export default function RegisterPage() {
   return (
     <div className="container-mall py-16 max-w-md">
       <h1 className="text-2xl font-bold text-center mb-2">회원가입</h1>
-      <p className="text-center text-xs text-gray-500 mb-8">가입시 적립금 1,000원이 즉시 지급됩니다 🎁</p>
+      <p className="text-center text-xs text-gray-500 mb-6">가입시 적립금 1,000원이 즉시 지급됩니다 🎁</p>
+
+      {/* 카카오 간편가입 — 별도 입력 없이 카카오 계정으로 바로 가입·로그인 */}
+      <button
+        type="button"
+        onClick={() => signIn("kakao", { callbackUrl: "/?welcome=1" })}
+        className="w-full h-14 rounded-md text-base font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
+        style={{ backgroundColor: "#FEE500", color: "#000000d9" }}
+      >
+        <KakaoIcon /> 카카오로 3초 만에 가입하기
+      </button>
+      <p className="mt-2 text-center text-[11px] text-gray-400">카카오 계정으로 가입하면 아이디·비밀번호 없이 바로 이용할 수 있어요</p>
+
+      <div className="my-6 flex items-center gap-3 text-sm text-gray-400">
+        <div className="flex-1 h-px bg-gray-200" />
+        <span>또는 직접 입력해서 가입</span>
+        <div className="flex-1 h-px bg-gray-200" />
+      </div>
 
       <form onSubmit={submit} className="space-y-3">
         <div>
@@ -229,5 +247,13 @@ export default function RegisterPage() {
         <Link href="/login" className="text-brand-600 hover:underline">로그인</Link>
       </div>
     </div>
+  );
+}
+
+function KakaoIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000d9" aria-hidden="true">
+      <path d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.86 5.31 4.66 6.73l-1.19 4.37a.3.3 0 0 0 .46.33l5.09-3.38c.32.03.65.05.98.05 5.52 0 10-3.58 10-8S17.52 3 12 3z" />
+    </svg>
   );
 }

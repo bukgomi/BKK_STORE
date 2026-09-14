@@ -150,7 +150,7 @@ export async function notifyAdminOrderReceived(args: {
   const forceSms = (process.env.ADMIN_NEW_ORDER_FORCE_SMS || "").toLowerCase() === "true";
   let smsResults: Array<{ phone: string; ok: boolean; error?: string }> = [];
   if (forceSms) {
-    const smsBody = `[낚시몰] 신규 주문 ${args.orderNo}\n${args.recipient}님 / ${formatKRW(args.totalAmount)}\n${args.productSummary}`;
+    const smsBody = `[탑캐스팅] 신규 주문 ${args.orderNo}\n${args.recipient}님 / ${formatKRW(args.totalAmount)}\n${args.productSummary}`;
     smsResults = await Promise.all(
       phones.map(async (phone) => {
         const r = await sendSms({ to: phone, message: smsBody });
@@ -160,7 +160,7 @@ export async function notifyAdminOrderReceived(args: {
   }
 
   // 이메일
-  const subject = `[낚시몰] 신규 주문 — ${args.orderNo} (${formatKRW(args.totalAmount)})`;
+  const subject = `[탑캐스팅] 신규 주문 — ${args.orderNo} (${formatKRW(args.totalAmount)})`;
   const text =
 `신규 주문이 접수되었습니다.
 

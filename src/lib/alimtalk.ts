@@ -53,7 +53,7 @@ export const ALIMTALK_TEMPLATES: Record<TemplateKey, TemplateDef> = {
     templateCode: process.env.ALIMTALK_TPL_ORDER_PAID || "order_paid",
     title: "주문이 접수되었어요",
     body: (v) =>
-`안녕하세요 ${v.name}님, 낚시몰입니다.
+`안녕하세요 ${v.name}님, 탑캐스팅입니다.
 
 주문이 정상적으로 접수되었습니다.
 
@@ -128,7 +128,7 @@ export const ALIMTALK_TEMPLATES: Record<TemplateKey, TemplateDef> = {
     templateCode: process.env.ALIMTALK_TPL_ADMIN_NEW_ORDER || "admin_new_order",
     title: "신규 주문이 접수되었습니다",
     body: (v) =>
-`[낚시몰] 신규 주문 접수
+`[탑캐스팅] 신규 주문 접수
 
 ▶ 주문번호: ${v.orderNo}
 ▶ 주문자: ${v.recipient}
@@ -186,11 +186,11 @@ export async function sendAlimtalk(args: SendArgs): Promise<AlimtalkResult> {
       tpl_code: tpl.templateCode,
       sender: normalizePhone(sender),
       receiver_1: to,
-      subject_1: tpl.title || "낚시몰",
+      subject_1: tpl.title || "탑캐스팅",
       message_1: body,
       // 카카오톡 미수신시 SMS 자동 폴백
       failover: "Y",
-      fsubject_1: tpl.title || "낚시몰",
+      fsubject_1: tpl.title || "탑캐스팅",
       fmessage_1: body,
       testMode: process.env.NODE_ENV === "production" ? "N" : "Y",
     });

@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useWishlist } from "@/store/wishlist";
 
 export default function WishlistItemActions({ productId }: { productId: string }) {
   const router = useRouter();
@@ -10,8 +11,9 @@ export default function WishlistItemActions({ productId }: { productId: string }
     if (!confirm("위시리스트에서 제거하시겠습니까?")) return;
     setLoading(true);
     try {
-      await fetch(`/api/wishlist?productId=${productId}`, { method: "DELETE" });
-      router.refresh();
+      const r = await useWishlist.getState().remove(productId); // 스토어가 API 호출 + 헤더 배지/하트 동기화
+      if (r.ok) router.refresh();
+      else alert(r.error || "제거 실패");
     } finally {
       setLoading(false);
     }

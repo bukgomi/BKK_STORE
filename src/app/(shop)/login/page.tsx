@@ -1,19 +1,37 @@
 "use client";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
 export default function LoginPage() {
-  const router = useRouter();
   const sp = useSearchParams();
-  const callbackUrl = sp.get("callbackUrl") || "/";
+  // 같은 사이트 내부 경로만 허용 (외부 주소로의 리다이렉트 방지)
+  const rawCallback = sp.get("callbackUrl") || "/";
+  // "/" 로 시작하되 "//" 나 "/\" 처럼 프로토콜 상대 주소로 해석될 수 있는 값은 거부
+  const callbackUrl = /^\/(?![\/\\])/.test(rawCallback) ? rawCallback : "/";
+  const resetDone = sp.get("reset") === "ok";
+  // NextAuth 가 소셜 로그인 실패 시 ?error= 로 돌려보냄
+  const OAUTH_ERRORS: Record<string, string> = {
+    OAuthAccountNotLinked: "같은 이메일로 이미 가입된 계정이 있습니다. 아이디/비밀번호로 로그인해 주세요.",
+    AccountBlocked: "탈퇴 또는 이용 정지된 계정입니다. 고객센터로 문의해 주세요.",
+    OAuthSignin: "소셜 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    OAuthCallback: "소셜 로그인 인증에 실패했습니다. 다시 시도해 주세요.",
+    Callback: "소셜 로그인 처리 중 오류가 났습니다. 다시 시도해 주세요.",
+    AccessDenied: "소셜 로그인이 취소되었습니다.",
+  };
+  const methodLabel: Record<string, string> = { credentials: "아이디/비밀번호", naver: "네이버", kakao: "카카오" };
+  const dupMethods = (sp.get("methods") || "").split(",").filter(Boolean).map((m) => methodLabel[m] || m).join(", ");
+  const dupHint = sp.get("hint") || "";
+  const oauthError = sp.get("error") === "PhoneDuplicate"
+    ? `이미 같은 휴대폰 번호로 가입된 계정이 있습니다.${dupMethods ? ` 기존 계정은 ${dupMethods} 로그인으로 가입되어 있어요.` : ""}${dupHint ? ` (아이디 ${dupHint})` : ""} 그 방법으로 로그인하거나 아이디/비밀번호 찾기를 이용해 주세요.`
+    : (OAUTH_ERRORS[sp.get("error") || ""] || "");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpStep, setOtpStep] = useState(false); // true 면 OTP 입력 단계
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(oauthError);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +55,8 @@ export default function LoginPage() {
         setError("아이디(또는 이메일) 또는 비밀번호가 올바르지 않습니다.");
       }
     } else {
-      router.push(callbackUrl);
+      // 헤더 등 서버 컴포넌트가 새 세션으로 다시 그려지도록 전체 이동 (client 라우터 캐시에 남은 로그아웃 상태 화면 방지)
+      window.location.assign(callbackUrl);
     }
   };
 
@@ -55,7 +74,7 @@ export default function LoginPage() {
     <div className="container-mall py-16 max-w-[480px]">
       <h1 className="text-3xl font-bold text-center mb-2">로그인</h1>
       <p className="text-center text-sm text-gray-500 mb-10">
-        낚시몰에 오신 것을 환영합니다
+        탑캐스팅에 오신 것을 환영합니다
       </p>
 
       <form onSubmit={submit} className="space-y-5">
@@ -108,6 +127,12 @@ export default function LoginPage() {
             <button type="button" onClick={resetOtp} className="text-sm text-amber-800 hover:text-amber-900 underline font-medium">
               ← 다른 계정으로 로그인
             </button>
+          </div>
+        )}
+
+        {resetDone && !error && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-md px-4 py-3">
+            <p className="text-sm text-emerald-800">비밀번호가 재설정되었습니다. 새 비밀번호로 로그인해주세요.</p>
           </div>
         )}
 

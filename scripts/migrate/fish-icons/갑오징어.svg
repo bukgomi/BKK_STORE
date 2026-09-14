@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="800" height="800">
+  <rect width="200" height="200" fill="#ffffff"/>
+  <circle cx="100" cy="100" r="86" fill="#eef4fb"/>
+  <g transform="translate(0,4)">
+    <path d="M100 18 C130 18 132 60 128 112 L72 112 C68 60 70 18 100 18 Z" fill="#c9a56b"/>
+    <path d="M100 18 C150 34 148 90 128 104 L100 96 L72 104 C52 90 50 34 100 18 Z" fill="#8a6a3a" opacity="0.55"/>
+    <circle cx="86" cy="118" r="7" fill="#fff"/><circle cx="86" cy="118" r="3.5" fill="#1f2937"/>
+    <circle cx="114" cy="118" r="7" fill="#fff"/><circle cx="114" cy="118" r="3.5" fill="#1f2937"/>
+    <path d="M76 126 C70 150 80 162 74 184" stroke="#c9a56b" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M86 126 C82 150 90 162 84 184" stroke="#c9a56b" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M96 126 C94 150 100 162 94 184" stroke="#c9a56b" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M104 126 C104 150 108 162 102 184" stroke="#c9a56b" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M114 126 C116 150 118 162 112 184" stroke="#c9a56b" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M124 126 C128 150 128 162 122 184" stroke="#c9a56b" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M70 126 C50 150 46 172 40 194 M130 126 C150 150 154 172 160 194" stroke="#c9a56b" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+</svg>

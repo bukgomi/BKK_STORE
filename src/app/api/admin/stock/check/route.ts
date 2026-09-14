@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
   `;
 
   const result = await notifyAdmin({
-    subject: `[낚시몰] 재고 부족 알림 (${low.length}건)`,
+    subject: `[탑캐스팅] 재고 부족 알림 (${low.length}건)`,
     html,
     text,
   });

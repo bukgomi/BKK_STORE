@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "낚시몰";
+const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
 
 /**
  * PWA Manifest

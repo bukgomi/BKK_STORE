@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { formatKRW } from "@/lib/utils";
-import { getAdminEmails } from "@/lib/admin-guard";
+import { getAdminEmails, requireAdmin } from "@/lib/admin-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +10,7 @@ type SP = { [k: string]: string | string[] | undefined };
 const PAGE_SIZE = 20;
 
 export default async function AdminUsersPage({ searchParams }: { searchParams: SP }) {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const q = (searchParams.q as string) || "";
   const page = Math.max(1, parseInt((searchParams.page as string) || "1", 10));
 

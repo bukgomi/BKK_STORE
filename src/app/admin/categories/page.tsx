@@ -1,9 +1,11 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import CategoryManager from "./CategoryManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCategoriesPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const categories = await prisma.category.findMany({
     orderBy: [{ parentId: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     include: { _count: { select: { products: true } } },

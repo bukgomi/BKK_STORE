@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { getSiteSettings } from "@/lib/site-settings";
+import { formatMin } from "@/lib/shipping";
 
 export const metadata: Metadata = {
-  title: "배송 안내 | 낚시몰",
+  title: "배송 안내 | 탑캐스팅",
   description: "배송 지역, 배송비, 배송 기간 안내",
 };
 
-export default function ShippingPage() {
+export default async function ShippingPage() {
+  const freeMin = (await getSiteSettings()).freeShippingMin;
   return (
     <>
       <h1 className="text-2xl font-bold mb-2">배송 안내</h1>
@@ -28,8 +31,8 @@ export default function ShippingPage() {
             </tr>
           </thead>
           <tbody>
-            <tr><td className="px-4 py-2 border-b border-gray-100">5만원 미만 주문</td><td className="px-4 py-2 text-right border-b border-gray-100">3,000원</td></tr>
-            <tr><td className="px-4 py-2 border-b border-gray-100">5만원 이상 주문</td><td className="px-4 py-2 text-right border-b border-gray-100 text-emerald-600 font-bold">무료</td></tr>
+            <tr><td className="px-4 py-2 border-b border-gray-100">{formatMin(freeMin, "만")} 미만 주문</td><td className="px-4 py-2 text-right border-b border-gray-100">3,000원</td></tr>
+            <tr><td className="px-4 py-2 border-b border-gray-100">{formatMin(freeMin, "만")} 이상 주문</td><td className="px-4 py-2 text-right border-b border-gray-100 text-emerald-600 font-bold">무료</td></tr>
             <tr><td className="px-4 py-2 border-b border-gray-100">제주 지역 추가</td><td className="px-4 py-2 text-right border-b border-gray-100">+3,000원</td></tr>
             <tr><td className="px-4 py-2">도서산간 지역 추가</td><td className="px-4 py-2 text-right">+5,000원</td></tr>
           </tbody>

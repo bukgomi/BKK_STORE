@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/admin-guard";
 import Link from "next/link";
 import { getCachedNaverFeed, FEED_COLUMNS } from "@/lib/naver-feed";
 import { formatKRW } from "@/lib/utils";
@@ -9,6 +10,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "ht
 const FEED_URL = `${SITE.replace(/\/$/, "")}/api/feed/naver`;
 
 export default async function AdminFeedsPage() {
+  await requireAdmin(); // 레이아웃 가드와 별개로 페이지마다 재검사 (클라이언트 내비게이션 시 레이아웃은 다시 렌더되지 않음)
   const { tsv, stats } = await getCachedNaverFeed();
 
   // 첫 5개 행 미리보기
