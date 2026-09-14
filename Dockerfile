@@ -37,5 +37,6 @@ COPY scripts ./scripts
 COPY src ./src
 COPY tsconfig.json ./
 EXPOSE 3000
-# 시작 시 스키마 반영 후 서버 실행 (migrations 도입 후에는 prisma migrate deploy 로 교체)
-CMD ["sh", "-c", "npx prisma db push --skip-generate && npx next start -p 3000"]
+# 시작 시 미적용 마이그레이션만 적용(prisma migrate deploy) 후 서버 실행.
+# 스키마 강제 동기화(prisma의 push 명령)는 컬럼 삭제·재생성으로 운영 데이터를 잃을 수 있어 운영 경로에서 쓰지 않는다.
+CMD ["sh", "-c", "npx prisma migrate deploy && npx next start -p 3000"]

@@ -70,9 +70,36 @@ cp .env.example .env
 
 ### 4. DB 마이그레이션 + 시드
 ```bash
-npm run db:push      # 스키마 적용
-npm run db:seed      # 카테고리 + 샘플 상품 300개 생성
+npm run db:migrate:deploy   # prisma/migrations 적용 (운영과 동일한 방식)
+npm run db:seed             # 카테고리 + 샘플 상품 300개 생성
 ```
+
+#### 스키마 변경 흐름 (Prisma Migrate)
+
+스키마는 `prisma/migrations/` 의 마이그레이션 파일로만 바꾼다.
+
+```bash
+# 1) prisma/schema.prisma 수정
+# 2) 마이그레이션 파일 생성 + 로컬 DB 적용 (호스트에서 실행, DATABASE_URL 은 localhost:5432)
+npm run db:migrate -- --name add_something
+# 3) Docker 개발 환경이면 컨테이너 재시작 → entrypoint 가 migrate deploy 로 반영
+docker compose restart app worker
+```
+
+> ⚠️ `npm run db:push` 는 **개인 로컬 실험용**으로만 남겨 두었다. 마이그레이션 파일을 만들지 않고 스키마를 강제로 맞추면서
+> 컬럼을 지우고 다시 만들 수 있으므로 **운영 DB·공유 개발 DB 에는 절대 사용하지 않는다.** 운영 컨테이너는 `prisma migrate deploy` 만 실행한다.
+
+#### 기존 개발 DB 전환 (migrations 도입 전 `db push` 로 만든 DB 1회)
+
+이미 `db push` 로 스키마가 들어 있는 DB 에 `migrate deploy` 를 그대로 돌리면 "relation already exists" 로 실패한다.
+베이스라인 마이그레이션을 "이미 적용됨" 으로 한 번만 표시해 준다 (Docker 개발 환경 기준).
+
+```bash
+docker compose exec app npx prisma migrate resolve --applied 20260914000000_init
+docker compose exec app npx prisma migrate status   # "Database schema is up to date!"
+```
+
+새 볼륨(`npm run docker:reset` 후)이라면 이 과정 없이 entrypoint 가 처음부터 적용한다.
 
 ### 5. 개발 서버 실행
 ```bash
