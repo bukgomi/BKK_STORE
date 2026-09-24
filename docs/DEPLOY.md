@@ -28,7 +28,7 @@ ss -tlnp | grep -E ':80 |:443 '
 
 ```powershell
 ssh-keygen -t ed25519 -C "topcasting-deploy"      # 질문은 전부 Enter (비밀문구 없이)
-Get-Content $env:USERPROFILE.sshid_ed25519.pub    # 이 한 줄이 공개키 — 2-2 에서 서버에 넣는다
+Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub    # 이 한 줄이 공개키 — 2-2 에서 서버에 넣는다
 ```
 
 ## 2. 최초 접속 후 보안 기본 설정
