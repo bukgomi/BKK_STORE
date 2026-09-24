@@ -45,11 +45,11 @@ async function search(term) {
     if (!hit) { console.log("✗", ko); continue; }
     const file = `${ko}.jpg`;
     const buf = Buffer.from(await (await fetch(hit.thumb, { headers: { "User-Agent": UA } })).arrayBuffer());
-    fs.writeFileSync(path.join("public/uploads/rigs/species", file), buf);
-    out[ko] = { path: `/uploads/rigs/species/${file}`, source: hit.url, title: hit.title.replace(/^File:/, ""), artist: hit.artist, license: hit.license };
+    fs.writeFileSync(path.join("public/images/rigs/species", file), buf);
+    out[ko] = { path: `/images/rigs/species/${file}`, source: hit.url, title: hit.title.replace(/^File:/, ""), artist: hit.artist, license: hit.license };
     console.log("✔", ko, "←", hit.title.slice(5, 60), "|", hit.license, "|", hit.artist.slice(0, 30), `${Math.round(buf.length / 1024)}KB`);
     await new Promise((r) => setTimeout(r, 400));
   }
-  fs.writeFileSync("public/uploads/rigs/species/credits.json", JSON.stringify(out, null, 2));
+  fs.writeFileSync("public/images/rigs/species/credits.json", JSON.stringify(out, null, 2));
   console.log("완료:", Object.keys(out).length, "종");
 })();

@@ -36,6 +36,10 @@ export const metadata: Metadata = {
     description: SITE_DESC,
     images: ["/images/og-default.png"],
   },
+  icons: {
+    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: "/icons/apple-touch-icon.png",
+  },
 
   robots: {
     index: true,
