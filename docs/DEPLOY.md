@@ -10,8 +10,26 @@
 ## 1. VPS 준비
 
 - Ubuntu 22.04 LTS, RAM 4GB 이상, 디스크 50GB 이상, 공인 IP 1개
-- 업체 콘솔에서 **SSH 공개키를 등록**하고 만든다 (비밀번호 로그인은 뒤에서 끈다)
 - 아래에서 서버 IP 를 `<SERVER_IP>` 로 적는다
+
+### 1-1. 카페24 가상서버호스팅으로 샀을 때
+
+- 신청 시 **OS: Ubuntu 22.04**, **설치사양: OS만 설치** 를 골라야 한다. "OS+APM" 을 고르면 Apache 가 80 포트를 차지해 Caddy 와 충돌한다.
+- 서버 IP 와 **임시 root 비밀번호**는 카페24 → 나의서비스관리 → 가상서버호스팅 → 서버 정보에서 본다. SSH 키 등록 화면은 없으므로 첫 접속은 root 비밀번호로 하고, 2-2 에서 키를 넣은 뒤 비밀번호 로그인을 끈다.
+- 카페24 콘솔에 방화벽 설정이 따로 있으면 22/80/443 만 허용으로 맞춘다 (없으면 서버 안 ufw 만으로 충분).
+- 첫 접속 후 Apache 가 없는지 확인한다. 아무것도 안 나오면 정상이다.
+
+```bash
+systemctl status apache2 --no-pager 2>/dev/null | head -3
+ss -tlnp | grep -E ':80 |:443 '
+```
+
+### 1-2. 내 PC 에서 SSH 키 만들기 (Windows PowerShell, 1회)
+
+```powershell
+ssh-keygen -t ed25519 -C "topcasting-deploy"      # 질문은 전부 Enter (비밀문구 없이)
+Get-Content $env:USERPROFILE.sshid_ed25519.pub    # 이 한 줄이 공개키 — 2-2 에서 서버에 넣는다
+```
 
 ## 2. 최초 접속 후 보안 기본 설정
 
@@ -28,14 +46,18 @@ adduser deploy            # 비밀번호는 sudo 용으로만 쓴다 (길게)
 usermod -aG sudo deploy
 ```
 
-### 2-2. SSH 키 복사
+### 2-2. SSH 키 등록
+
+내 PC 의 공개키(1-2 에서 출력된 `ssh-ed25519 AAAA... topcasting-deploy` 한 줄)를 서버의 deploy 사용자에 넣는다.
 
 ```bash
 mkdir -p /home/deploy/.ssh
-cp /root/.ssh/authorized_keys /home/deploy/.ssh/
+echo "<PLACEHOLDER: 공개키 한 줄>" >> /home/deploy/.ssh/authorized_keys
 chown -R deploy:deploy /home/deploy/.ssh
 chmod 700 /home/deploy/.ssh && chmod 600 /home/deploy/.ssh/authorized_keys
 ```
+
+(업체 콘솔에서 이미 root 에 키를 넣었다면 `cp /root/.ssh/authorized_keys /home/deploy/.ssh/` 로 복사해도 된다.)
 
 **다른 터미널을 하나 더 열어** `ssh deploy@<SERVER_IP>` 가 되는지 먼저 확인한다. 되면 계속한다.
 
