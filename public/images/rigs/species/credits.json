@@ -1,0 +1,161 @@
+{
+  "문어": {
+    "path": "/images/rigs/species/문어.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Giant_Pacific_Octopus_(Octopus_dofleini)_(7007259144).jpg",
+    "title": "Giant Pacific Octopus (Octopus dofleini) (7007259144).jpg",
+    "artist": "Cliff from Arlington, Virginia, USA",
+    "license": "CC BY 2.0"
+  },
+  "호래기": {
+    "path": "/images/rigs/species/호래기.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Loligo_vulgaris_(juvenile_-_ventral).jpg",
+    "title": "Loligo vulgaris (juvenile - ventral).jpg",
+    "artist": "Hans Hillewaert",
+    "license": "CC BY-SA 4.0",
+    "note": "유사 어종 사진"
+  },
+  "부시리": {
+    "path": "/images/rigs/species/부시리.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E3%83%92%E3%83%A9%E3%83%9E%E3%82%B5.jpg",
+    "title": "ヒラマサ.jpg",
+    "artist": "Rakurakuda",
+    "license": "CC BY-SA 4.0"
+  },
+  "쏘가리": {
+    "path": "/images/rigs/species/쏘가리.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%90%D1%83%D1%85%D0%B0_(%D0%BA%D0%B8%D1%82%D0%B0%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D0%BE%D0%BA%D1%83%D0%BD%D1%8C)_%D1%87%D1%83%D1%87%D0%B5%D0%BB%D0%BE.JPG",
+    "title": "Ауха (китайский окунь) чучело.JPG",
+    "artist": "Andshel",
+    "license": "CC BY-SA 3.0"
+  },
+  "갑오징어": {
+    "path": "/images/rigs/species/갑오징어.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Golden_Cuttlefish_(Sepia_esculenta)_(49152874797).jpg",
+    "title": "Golden Cuttlefish (Sepia esculenta) (49152874797).jpg",
+    "artist": "Rickard Zerpe",
+    "license": "CC BY 2.0",
+    "article": "https://en.wikipedia.org/wiki/Acanthosepion%20esculentum"
+  },
+  "쭈꾸미": {
+    "path": "/images/rigs/species/쭈꾸미.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Octopus_ocellatus.jpg",
+    "title": "Octopus ocellatus.jpg",
+    "artist": "self",
+    "license": "CC BY-SA 3.0",
+    "article": "https://ja.wikipedia.org/wiki/%E3%82%A4%E3%82%A4%E3%83%80%E3%82%B3"
+  },
+  "광어": {
+    "path": "/images/rigs/species/광어.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Hirame_flatfish_front.JPG",
+    "title": "Hirame flatfish front.JPG",
+    "artist": "サフィル",
+    "license": "CC BY-SA 4.0",
+    "article": "https://ja.wikipedia.org/wiki/%E3%83%92%E3%83%A9%E3%83%A1"
+  },
+  "우럭": {
+    "path": "/images/rigs/species/우럭.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Sebastes_schlegelii_Hilgendorf,_1880.jpg",
+    "title": "Sebastes_schlegelii_Hilgendorf,_1880.jpg",
+    "artist": "Tomarin",
+    "license": "CC BY-SA 2.1 jp",
+    "article": "https://ko.wikipedia.org/wiki/%EC%A1%B0%ED%94%BC%EB%B3%BC%EB%9D%BD"
+  },
+  "갈치": {
+    "path": "/images/rigs/species/갈치.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Trichiurus_lepturus_SI2.jpg",
+    "title": "Trichiurus lepturus SI2.jpg",
+    "artist": "Jeff Williams /si.edu",
+    "license": "Public domain",
+    "article": "https://ko.wikipedia.org/wiki/%EA%B0%88%EC%B9%98"
+  },
+  "무늬오징어": {
+    "path": "/images/rigs/species/무늬오징어.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bigfin_Reef_Squid_2.jpg",
+    "title": "Bigfin Reef Squid 2.jpg",
+    "artist": "Silke Baron from Vienna, Austria",
+    "license": "CC BY 2.0",
+    "article": "https://en.wikipedia.org/wiki/Bigfin%20reef%20squid"
+  },
+  "한치": {
+    "path": "/images/rigs/species/한치.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Heterololigo_bleekeri_in_Sendai_Umino-Mori_Aquarium.jpg",
+    "title": "Heterololigo bleekeri in Sendai Umino-Mori Aquarium.jpg",
+    "artist": "Kinori",
+    "license": "CC0",
+    "article": "https://ja.wikipedia.org/wiki/%E3%83%A4%E3%83%AA%E3%82%A4%E3%82%AB",
+    "note": "유사 어종(창꼴뚜기) 사진"
+  },
+  "참돔": {
+    "path": "/images/rigs/species/참돔.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Pagrus_major_Red_seabream_ja01.jpg",
+    "title": "Pagrus_major_Red_seabream_ja01.jpg",
+    "artist": "Miya",
+    "license": "CC BY-SA 3.0",
+    "article": "https://ko.wikipedia.org/wiki/%EC%B0%B8%EB%8F%94"
+  },
+  "농어": {
+    "path": "/images/rigs/species/농어.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:%E3%82%B9%E3%82%BA%E3%82%AD.jpg",
+    "title": "スズキ.jpg",
+    "artist": "Kinori",
+    "license": "CC0",
+    "article": "https://ja.wikipedia.org/wiki/%E3%82%B9%E3%82%BA%E3%82%AD%20(%E9%AD%9A)"
+  },
+  "삼치": {
+    "path": "/images/rigs/species/삼치.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Scomberomorus_niphonius_Naturalis_Biodiversity_Center_-_RMNH.ART.192_-_Scomberomorus_nichonius_(Cuvier)_-_Kawahara_Keiga_-_1823_-_1829_-_Siebold_Collection_-_pencil_drawing_-_water_colour.jpeg",
+    "title": "Scomberomorus niphonius Naturalis Biodiversity Center - RMNH.ART.192 - Scomberomorus nichonius (Cuvier) - Kawahara Keiga - 1823 - 1829 - Siebold Collection - pencil drawing - water colour.jpeg",
+    "artist": "(Cuvier)",
+    "license": "Public domain",
+    "article": "https://en.wikipedia.org/wiki/Japanese%20Spanish%20mackerel"
+  },
+  "대구": {
+    "path": "/images/rigs/species/대구.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Gadus_morhua_Cod-2b-Atlanterhavsparken-Norway.JPG",
+    "title": "Gadus morhua Cod-2b-Atlanterhavsparken-Norway.JPG",
+    "artist": "Hans-Petter Fjeld",
+    "license": "CC BY-SA 2.5",
+    "article": "https://en.wikipedia.org/wiki/Gadus",
+    "note": "유사 어종(대서양대구) 사진"
+  },
+  "볼락": {
+    "path": "/images/rigs/species/볼락.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Sebastes_Inermis.jpg",
+    "title": "Sebastes_Inermis.jpg",
+    "artist": "Daiju Azuma",
+    "license": "CC BY-SA 3.0",
+    "article": "https://ko.wikipedia.org/wiki/%EB%B3%BC%EB%9D%BD"
+  },
+  "전갱이": {
+    "path": "/images/rigs/species/전갱이.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Trachurus_japonicus_Umi-Tamago.jpg",
+    "title": "Trachurus japonicus Umi-Tamago.jpg",
+    "artist": "Totti",
+    "license": "CC BY-SA 4.0",
+    "article": "https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%A2%E3%82%B8"
+  },
+  "배스": {
+    "path": "/images/rigs/species/배스.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Largemouth_Bass_(Micropterus_salmoides)_June_2023_(cropped).jpg",
+    "title": "Largemouth Bass (Micropterus salmoides) June 2023 (cropped).jpg",
+    "artist": "USFWS Mountain Prairie",
+    "license": "Public domain",
+    "article": "https://en.wikipedia.org/wiki/Largemouth%20bass"
+  },
+  "송어": {
+    "path": "/images/rigs/species/송어.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Truite_gold.jpg",
+    "title": "Truite gold.jpg",
+    "artist": "This illustration was made by Citron\nYou must credit this : Citron / CC-BY-SA-3.0",
+    "license": "CC BY-SA 3.0",
+    "article": "https://ja.wikipedia.org/wiki/%E3%83%8B%E3%82%B8%E3%83%9E%E3%82%B9"
+  },
+  "감성돔": {
+    "path": "/images/rigs/species/감성돔.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Black_Porgy.JPG",
+    "title": "Black Porgy.JPG",
+    "artist": "TMDSA",
+    "license": "CC BY-SA 3.0",
+    "article": "https://en.wikipedia.org/wiki/Acanthopagrus%20schlegelii"
+  }
+}

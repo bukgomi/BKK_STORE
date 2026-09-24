@@ -4,13 +4,13 @@
  *
  * 시즌·지역 근거(대략): 국내 낚시 시즌 자료 종합 — 농어 서해·남해 5~10월/동해 6~9월, 무늬오징어·한치 5~10월,
  * 방어·부시리 9~1월, 대구·볼락·열기 겨울, 광어 4월~·우럭 5~6월 피크, 갑오징어·쭈꾸미 서해 가을(8~11월).
- * 어종 사진: public/uploads/rigs/species/<어종>.jpg (위키미디어 공용, credits.json 에 출처)
+ * 어종 사진: public/images/rigs/species/<어종>.jpg (저장소에 포함 — 위키미디어 공용, credits.json 에 출처)
  */
 import { PrismaClient } from "@prisma/client";
 import { existsSync } from "node:fs";
 const prisma = new PrismaClient();
 
-const img = (ko: string) => (existsSync(`public/uploads/rigs/species/${ko}.jpg`) ? `/uploads/rigs/species/${ko}.jpg` : null);
+const img = (ko: string) => (existsSync(`public/images/rigs/species/${ko}.jpg`) ? `/images/rigs/species/${ko}.jpg` : null);
 
 async function ids(...names: string[]) {
   const rows = await prisma.product.findMany({ where: { isActive: true, OR: names.map((n) => ({ name: { contains: n } })) }, select: { id: true, name: true } });

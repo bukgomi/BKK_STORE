@@ -22,7 +22,7 @@ export default async function RigsPage({ searchParams }: { searchParams: { rig?:
   const productMap: Record<string, RigProduct> = Object.fromEntries(products.map((p) => [p.id, p]));
   // 어종 사진 출처 (위키미디어 공용 CC 라이선스 — 페이지 하단에 표기)
   type Credit = { title: string; artist: string; license: string; source: string };
-  const credits: Credit[] = await readFile(path.join(process.cwd(), "public/uploads/rigs/species/credits.json"), "utf8").then((t) => Object.values(JSON.parse(t)) as Credit[]).catch(() => [] as Credit[]);
+  const credits: Credit[] = await readFile(path.join(process.cwd(), "public/images/rigs/species/credits.json"), "utf8").then((t) => Object.values(JSON.parse(t)) as Credit[]).catch(() => [] as Credit[]);
   const initialMonth = Math.min(12, Math.max(1, parseInt(searchParams.month || "", 10) || new Date().getMonth() + 1));
 
   return (
