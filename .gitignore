@@ -21,6 +21,8 @@ tsconfig.tsbuildinfo
 # 데이터 이관 산출물 (덤프/JSON 은 개인정보 포함 가능 → 커밋 금지)
 scripts/migrate/out/
 *.sql
+# Prisma 마이그레이션 SQL 은 반드시 포함 (위 *.sql 규칙의 예외)
+!prisma/migrations/**/*.sql
 
 # 업로드 파일(상품 이미지·채비도 사진 등)은 런타임 데이터 — 볼륨/R2 에 보관, 저장소에 커밋하지 않음
 public/uploads/*

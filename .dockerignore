@@ -8,6 +8,8 @@ node_modules
 public/uploads
 scripts/migrate/out
 *.sql
+# Prisma 마이그레이션 SQL 은 반드시 포함 (위 *.sql 규칙의 예외)
+!prisma/migrations/**/*.sql
 *.log
 coverage
 tests
