@@ -29,6 +29,10 @@ async function main() {
     process.exit(1);
   }
 
+  if (!process.env.ADMIN_PASSWORD && process.env.NODE_ENV === "production") {
+    console.error("[!] 운영 환경에서는 ADMIN_PASSWORD 가 필요합니다 (기본 비밀번호 사용 금지).");
+    process.exit(1);
+  }
   const password = process.env.ADMIN_PASSWORD || "changeme1234!";
   const name = process.env.ADMIN_NAME || "관리자";
   const passwordHash = await bcrypt.hash(password, 10);

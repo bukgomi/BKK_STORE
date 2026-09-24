@@ -3,6 +3,8 @@ const { withSentryConfig } = require("@sentry/nextjs");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Next 14: instrumentation.ts(Sentry 서버 초기화, 기동 시 설정 검증)를 로드하려면 필요
+  experimental: { instrumentationHook: true },
   webpack: (config) => {
     // @sentry/node → @prisma/instrumentation → @opentelemetry 의 동적 require 경고
     // (동작엔 영향 없음, dev 로그만 도배) — 무시

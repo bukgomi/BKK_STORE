@@ -205,7 +205,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml exec app np
 ```
 
 `https://<도메인>/admin` 에 `ADMIN_EMAILS` / `ADMIN_PASSWORD` 로 로그인 → 관리자 > 보안에서 비밀번호를 바꾼다.
-그 다음 `.env.production` 에서 `ADMIN_PASSWORD` 줄을 지우거나 비운다 (다음 재시작부터 시드가 비밀번호를 만지지 않는다).
+그 다음 `.env.production` 에서 `ADMIN_PASSWORD` 줄을 지우거나 비운다 (시드는 수동 실행할 때만 돌고, 기존 계정 비밀번호는 `ADMIN_RESET_PASSWORD=true` 일 때만 바꾼다).
 
 ## 8. cron 등록 (앱 정리 작업 + 백업)
 
@@ -225,6 +225,8 @@ crontab -e
 0 2 * * *   curl -fsS -m 300 -H "x-cron-token: <CRON_SECRET>" https://<도메인>/api/cron/cleanup >/dev/null 2>&1
 # 장기 미접속 회원 휴면 전환 — 매일 03:00
 0 3 * * *   curl -fsS -m 300 -H "x-cron-token: <CRON_SECRET>" https://<도메인>/api/cron/dormant-users >/dev/null 2>&1
+# 재고 부족 알림 — 매일 09:00 (헤더는 NOTIFY_CRON_TOKEN)
+0 9 * * *   curl -fsS -m 300 -H "x-cron-token: <NOTIFY_CRON_TOKEN>" https://<도메인>/api/admin/stock/check >/dev/null 2>&1
 # DB 백업 — 매일 04:00 (docs/BACKUP.md)
 0 4 * * *   cd /opt/bkk-store && ./scripts/backup/pg-backup.sh >> /var/log/bkk-backup.log 2>&1
 ```

@@ -20,7 +20,8 @@ function loadScript(): Promise<void> {
   if (scriptPromise) return scriptPromise;
 
   // 운영/테스트 환경 자동 분기
-  const isProd = process.env.NEXT_PUBLIC_INICIS_ENV === "production";
+  // 명시 값이 없으면 운영 빌드는 운영 SDK, 그 외는 스테이징 SDK
+  const isProd = process.env.NEXT_PUBLIC_INICIS_ENV ? process.env.NEXT_PUBLIC_INICIS_ENV === "production" : process.env.NODE_ENV === "production";
   const src = isProd
     ? "https://stdpay.inicis.com/stdjs/INIStdPay.js"
     : "https://stgstdpay.inicis.com/stdjs/INIStdPay.js";

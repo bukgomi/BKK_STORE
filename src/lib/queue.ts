@@ -1,4 +1,4 @@
-import { Queue, Worker, QueueEvents, type Processor, type ConnectionOptions } from "bullmq";
+import { Queue, Worker, QueueEvents, UnrecoverableError, type Processor, type ConnectionOptions } from "bullmq";
 import { getRedis, isRedisAvailable } from "@/lib/redis";
 import { logger } from "@/lib/logger";
 
@@ -114,25 +114,32 @@ export async function enqueue<T = any>(name: JobName | string, data: T, opts?: {
  * - Redis 없을때는 인메모리 핸들러로 등록
  */
 const _activeWorkers: Worker[] = [];
+// 잡 이름 → 핸들러. BullMQ 는 job.name 으로 워커를 고르지 않으므로(아무 워커나 잡을 집어감) 큐당 Worker 는 하나만 두고 여기서 분기한다
+const _handlers = new Map<string, Processor<any, any>>();
 
 export function registerWorker(name: JobName | string, processor: Processor<any, any>): void {
   if (isRedisAvailable()) {
-    const worker = new Worker(QUEUE_NAME, async (job) => {
-      if (job.name !== name) return;  // 다른 핸들러는 다른 워커에서
-      return processor(job, job.token!);
-    }, {
-      connection: getRedis() as unknown as ConnectionOptions,
-      concurrency: 5,
-    });
+    _handlers.set(name, processor);
+    if (_activeWorkers.length === 0) {
+      const worker = new Worker(QUEUE_NAME, async (job) => {
+        const handler = _handlers.get(job.name);
+        // 핸들러 없는 잡은 재시도해도 소용없음 → 즉시 실패 처리 (조용히 completed 되지 않게)
+        if (!handler) throw new UnrecoverableError(`no handler for job "${job.name}"`);
+        return handler(job, job.token!);
+      }, {
+        connection: getRedis() as unknown as ConnectionOptions,
+        concurrency: 5,
+      });
 
-    worker.on("completed", (job) => {
-      logger.debug("queue.completed", { name: job.name, id: job.id });
-    });
-    worker.on("failed", (job, err) => {
-      logger.error("queue.failed", { name: job?.name, id: job?.id, attempts: job?.attemptsMade, error: err.message });
-    });
+      worker.on("completed", (job) => {
+        logger.debug("queue.completed", { name: job.name, id: job.id });
+      });
+      worker.on("failed", (job, err) => {
+        logger.error("queue.failed", { name: job?.name, id: job?.id, attempts: job?.attemptsMade, error: err.message });
+      });
 
-    _activeWorkers.push(worker);
+      _activeWorkers.push(worker);
+    }
     logger.info("queue.worker_started", { name });
   } else {
     memHandlers.set(name, async (data) => { await processor({ name, data } as any, "" as any); });

@@ -9,7 +9,7 @@ const SITE_NAME = process.env.NEXT_PUBLIC_BUSINESS_NAME || "탑캐스팅";
 const SITE_DESC = "낚싯대, 릴, 라인, 루어, 채비 등 낚시용품을 합리적인 가격으로. 3만원 이상 무료배송.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE),
+  metadataBase: (() => { try { return new URL(SITE); } catch { return new URL("http://localhost:3000"); } })(),
   title: {
     default: `${SITE_NAME} - 낚시용품 전문 쇼핑몰`,
     template: `%s | ${SITE_NAME}`,

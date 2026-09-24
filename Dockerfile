@@ -15,6 +15,17 @@ RUN npm ci --no-audit --no-fund --legacy-peer-deps && npx prisma generate
 
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
+# 브라우저 번들에 인라인되는 NEXT_PUBLIC_* 는 "빌드 시점" 값이 굳는다 → compose build.args 로 전달 (값을 바꾸면 재빌드)
+ARG NEXT_PUBLIC_TOSS_CLIENT_KEY
+ARG NEXT_PUBLIC_INICIS_ENV=production
+ARG NEXT_PUBLIC_SITE_URL
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_DSN
+ENV NEXT_PUBLIC_TOSS_CLIENT_KEY=$NEXT_PUBLIC_TOSS_CLIENT_KEY \
+    NEXT_PUBLIC_INICIS_ENV=$NEXT_PUBLIC_INICIS_ENV \
+    NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
+    NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN \
+    SENTRY_DSN=$SENTRY_DSN
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

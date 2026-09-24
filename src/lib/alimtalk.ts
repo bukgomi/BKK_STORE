@@ -171,6 +171,9 @@ export async function sendAlimtalk(args: SendArgs): Promise<AlimtalkResult> {
 
   // 환경변수 미설정시: 콘솔 모드
   if (!apiKey || !userId || !senderKey || !sender) {
+    if (process.env.NODE_ENV === "production") {
+      return { ok: false, provider: "none", error: "알림톡 발송 설정(ALIMTALK_*)이 없습니다" };
+    }
     console.warn(
       `[ALIMTALK-DEV] To: ${to}\nTemplate: ${args.template} (${tpl.templateCode})\n--- BODY ---\n${body}\n------------`
     );

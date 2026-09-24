@@ -8,6 +8,9 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "ht
  * - 정적 페이지 + 활성 상품 + 카테고리
  * - 운영시 SEO 도구가 /sitemap.xml 으로 자동 접근
  */
+// 빌드 시점(더미 DB, env 없음)에 굳지 않도록 런타임 생성
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base: MetadataRoute.Sitemap = [
     { url: `${SITE}/`,           changeFrequency: "daily",   priority: 1.0 },

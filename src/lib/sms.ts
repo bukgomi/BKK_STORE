@@ -44,6 +44,9 @@ export async function sendSms(args: { to: string; message: string }): Promise<Sm
 
   // 환경변수 미설정시: 개발용 콘솔 모드
   if (!apiKey || !userId || !sender) {
+    if (process.env.NODE_ENV === "production") {
+      return { ok: false, provider: "none", error: "SMS 발송 설정(ALIGO_API_KEY/ALIGO_USER_ID/ALIGO_SENDER)이 없습니다" };
+    }
     console.warn(`[SMS-DEV] To: ${to}\n${args.message}`);
     return { ok: true, provider: "console", messageId: "dev-" + Date.now() };
   }

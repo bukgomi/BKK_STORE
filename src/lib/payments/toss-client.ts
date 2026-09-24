@@ -35,7 +35,9 @@ type Args = {
 
 export async function loadTossPayments(args: Args) {
   await loadScript();
-  const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY || "test_ck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+  // 운영 빌드에 키가 없으면 테스트 키로 결제창을 열어 승인 단계에서 전부 실패하므로, 명시적으로 막는다
+  const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY || (process.env.NODE_ENV !== "production" ? "test_ck_docs_Ovk5rk1EwkEbP0W43n07xlzm" : "");
+  if (!clientKey) throw new Error("결제 설정 오류: 토스 클라이언트 키가 빌드에 포함되지 않았습니다. 관리자에게 문의해 주세요.");
   const tp = window.TossPayments(clientKey);
 
   const origin = window.location.origin;

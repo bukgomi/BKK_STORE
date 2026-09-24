@@ -57,7 +57,15 @@ services:
     logging: *default-logging
 
   app:
-    build: .
+    build:
+      context: .
+      args:
+        # 브라우저 번들에 굳는 값들 (.env.production 에서 읽음). 이 값을 바꾸면 npm run prod:up 으로 재빌드해야 반영된다
+        NEXT_PUBLIC_TOSS_CLIENT_KEY: ${NEXT_PUBLIC_TOSS_CLIENT_KEY}
+        NEXT_PUBLIC_INICIS_ENV: ${NEXT_PUBLIC_INICIS_ENV:-production}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+        SENTRY_DSN: ${SENTRY_DSN:-}
     image: bkk-store:latest          # worker 가 같은 이미지를 재사용 (두 번 빌드하지 않음)
     restart: unless-stopped
     env_file: .env.production
@@ -74,6 +82,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      # 이미지에 curl/wget 이 없어 node fetch 로 확인. start_period 는 첫 기동의 migrate deploy 시간을 고려
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
     logging: *default-logging
 
   worker:
@@ -112,7 +127,8 @@ services:
       - caddy_data:/data       # 인증서 보관 (지우면 재발급 → Let's Encrypt 발급 제한 주의)
       - caddy_config:/config
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     logging: *default-logging
 
 volumes:
