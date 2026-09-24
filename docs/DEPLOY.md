@@ -24,6 +24,12 @@ systemctl status apache2 --no-pager 2>/dev/null | head -3
 ss -tlnp | grep -E ':80 |:443 '
 ```
 
+- 실수로 "OS+APM" 으로 받았다면 Apache·MariaDB 를 끄고 진행한다 (Caddy 가 80/443 을 써야 한다).
+
+```bash
+sudo systemctl disable --now apache2 mariadb 2>/dev/null; sudo ss -tlnp | grep -E ':80 |:443 ' || echo "80/443 비어 있음"
+```
+
 ### 1-2. 내 PC 에서 SSH 키 만들기 (Windows PowerShell, 1회)
 
 ```powershell
@@ -97,7 +103,20 @@ sudo systemctl enable --now fail2ban
 sudo fail2ban-client status sshd
 ```
 
-## 3. Docker 설치
+## 3. 스왑 + Docker 설치
+
+### 3-1. 스왑 2GB (필수)
+
+4GB 서버에서 `next build` 를 돌리면 메모리가 순간적으로 모자라 빌드가 죽는 일이 가장 흔하다. Docker 설치 전에 스왑을 만든다.
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+free -h            # Swap 줄에 2.0Gi 가 보이면 완료
+```
+
+### 3-2. Docker
 
 ```bash
 curl -fsSL https://get.docker.com | sudo sh
@@ -117,7 +136,7 @@ docker --version && docker compose version
 sudo mkdir -p /opt/bkk-store && sudo chown deploy:deploy /opt/bkk-store
 git clone https://github.com/bukgomi/BKK_STORE.git /opt/bkk-store
 cd /opt/bkk-store
-git checkout <PLACEHOLDER: 배포할 브랜치 또는 태그>
+git checkout main        # 운영은 항상 main 브랜치 (작업 브랜치는 main 에 머지한 뒤 배포)
 ```
 
 Node 는 서버에 설치하지 않아도 된다 (빌드·실행 모두 Docker 안에서 한다). `npm run prod:*` 스크립트를 쓰려면 아래처럼 node 만 가볍게 설치한다. 없으면 `package.json` 의 해당 `docker compose ...` 명령을 직접 친다.
@@ -188,9 +207,35 @@ docker compose --env-file .env.production -f docker-compose.prod.yml exec app np
 `https://<도메인>/admin` 에 `ADMIN_EMAILS` / `ADMIN_PASSWORD` 로 로그인 → 관리자 > 보안에서 비밀번호를 바꾼다.
 그 다음 `.env.production` 에서 `ADMIN_PASSWORD` 줄을 지우거나 비운다 (다음 재시작부터 시드가 비밀번호를 만지지 않는다).
 
-## 8. 백업 cron 등록
+## 8. cron 등록 (앱 정리 작업 + 백업)
 
-[docs/BACKUP.md](BACKUP.md) 의 1·2번을 따라 rclone 리모트를 만들고 cron 을 등록한다. 등록 후 한 번 수동 실행해 `backups/` 와 R2 에 파일이 생기는지 본다.
+앱에는 주기적으로 호출해야 하는 정리 작업 3개가 있다 (호출하지 않으면 미결제 주문이 안 지워지고 휴면 전환·로그 정리가 안 돈다).
+`.env.production` 의 `CRON_SECRET` 값을 헤더로 넣어 호출한다.
+
+```bash
+crontab -e
+```
+
+아래 줄을 추가한다. `<도메인>` 과 `<CRON_SECRET>` 은 실제 값으로 바꾼다.
+
+```
+# 미결제(PENDING) 주문 30분 후 자동 만료 — 5분마다
+*/5 * * * * curl -fsS -m 60 -H "x-cron-token: <CRON_SECRET>" https://<도메인>/api/cron/expire-pending >/dev/null 2>&1
+# 만료 토큰·오래된 로그 정리 — 매일 02:00
+0 2 * * *   curl -fsS -m 300 -H "x-cron-token: <CRON_SECRET>" https://<도메인>/api/cron/cleanup >/dev/null 2>&1
+# 장기 미접속 회원 휴면 전환 — 매일 03:00
+0 3 * * *   curl -fsS -m 300 -H "x-cron-token: <CRON_SECRET>" https://<도메인>/api/cron/dormant-users >/dev/null 2>&1
+# DB 백업 — 매일 04:00 (docs/BACKUP.md)
+0 4 * * *   cd /opt/bkk-store && ./scripts/backup/pg-backup.sh >> /var/log/bkk-backup.log 2>&1
+```
+
+한 번 손으로 호출해 `{"ok":true...}` 류 응답이 오는지 확인한다.
+
+```bash
+curl -sS -H "x-cron-token: <CRON_SECRET>" https://<도메인>/api/cron/expire-pending
+```
+
+백업은 [docs/BACKUP.md](BACKUP.md) 의 1·2번을 따라 rclone 리모트를 먼저 만든다. 등록 후 한 번 수동 실행해 `backups/` 와 R2 에 파일이 생기는지 본다.
 
 ## 9. 업데이트(배포) 절차
 
@@ -219,6 +264,7 @@ npm run prod:up
 - [ ] 서버 재부팅(`sudo reboot`) 후 1~2분 뒤 사이트가 다시 뜬다 (`restart: unless-stopped`)
 - [ ] 외부(내 PC)에서 `nc -zv <SERVER_IP> 5432` 와 `nc -zv <SERVER_IP> 6379` 가 **실패**한다 (연결되면 안 된다)
 - [ ] `nc -zv <SERVER_IP> 3000` 도 실패한다
+- [ ] cron 3개(expire-pending / cleanup / dormant-users)를 손으로 호출하면 정상 응답이 온다
 - [ ] 백업 cron 실행 후 `backups/` 와 R2 `db-backups/` 에 파일이 생긴다
 - [ ] `docs/BACKUP.md` 4번 복구 리허설을 첫 주 안에 1회 수행했다
 
